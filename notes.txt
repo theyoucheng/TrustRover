@@ -1,0 +1,19 @@
+https://maps.googleapis.com/maps/api/streetview?size=400x400&location=40.720032,-73.988354&fov=90&heading=235&pitch=10
+https://maps.googleapis.com/maps/api/streetview?size=400x400&location=51.7527456,-1.2524143&fov=90&heading=230&pitch=0
+https://maps.googleapis.com/maps/api/streetview?size=448x448&location=51.7429076,-1.2555835&fov=80&heading=150&pitch=0
+
+** size     :  width x height; yolo 448x448
+** location :  latitude, longitude
+** fov      :  field of view; maximum 120
+** pitch    :  up or down angle of the camera; default is 0; 90 (-10) degrees indicates straight up (down)
+** heading  :  the compass heading of the camera; 0 to 360
+
+## to retrieve an image by url
+import urllib
+urllib.urlretrieve("https://maps.googleapis.com/maps/api/streetview?size=400x400&location=51.7527456,-1.2524143&fov=90&heading=230&pitch=0", "01.jpg")
+
+Cmd+Shift+R
+
+NN13 5TX ==> NN12 8TB
+
+convert -delay 100 -loop 0 adv-images/*jpg myimage.gif

@@ -1,0 +1,157 @@
+<!DOCTYPE HTML>
+<HTML>
+    <HEAD>
+        <TITLE>TR Project</TITLE>
+        <SCRIPT src="http://maps.google.com/maps/api/js?sensor=false" type="text/javascript"></SCRIPT>
+        <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>        
+        <script type="text/javascript" src="{{ url_for('static', filename='StreetViewImages.js') }}"></script>
+
+        <SCRIPT type="text/javascript">
+          $SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
+          var origin_images=[];
+          var adv_images=[];
+          var i=0;
+          var j=0;
+
+          origin_view = document.createElement("img");
+          origin_view.height=150;
+          origin_view.width=150;
+          adv_view = document.createElement("img");
+          adv_view.height=150;
+          adv_view.width=150;
+
+          function show_origin_view(){
+            if (origin_images.length<=0)
+            {
+              setTimeout("show_origin_view()", time);
+              return;
+            }
+            var time=1000;
+            origin_view.src=origin_images[i];
+            if(i < origin_images.length - 1) i++;
+            else i=0;
+            setTimeout("show_origin_view()", time);
+          }
+
+          function show_adv_view(){
+            if (adv_images.length<=0)
+            {
+              setTimeout("show_adv_view()", time);
+              return;
+            }
+            var time=1000;
+            adv_view.src=origin_images[j];
+            if(j < adv_images.length - 1) j++;
+            else j=0;
+            setTimeout("show_adv_view()", time);
+          }
+
+          function main() {
+
+            var text1 = document.createTextNode("This will be the view by your self-driving car\n\n");
+            document.body.appendChild(text1);
+            document.body.appendChild(origin_view);
+            show_origin_view();
+
+            //var text2 = document.createTextNode("Untrusted scenes: \n\n");
+            //document.body.appendChild(text2);
+            //document.body.appendChild(adv_view);
+            //show_adv_view();
+
+            new StreetViewImages({
+              origin: document.getElementById("origin").value,
+              destination: document.getElementById("destination").value,
+              apiKey: "AIzaSyDzdWMOcjRgS-PkwxNbLIRBxrqfG_vMQGs",
+
+              onPanoLoaded: function (pano) {
+                  console.log(pano);
+
+                  $.get($SCRIPT_ROOT + '/_check_image', {
+                     u: pano.panoUrl, 
+                     https: pano.https,
+                     l_pano: pano.l_pano,
+                     fov: pano.fov,
+                     heading: pano.heading,
+                     pitch: pano.pitch,
+                     key: pano.key
+                  }
+                  , function(data) {
+                    //im = document.createElement("img");
+                    //im.src='./images/'+data.image_ret;
+                    //document.body.appendChild(im);
+                    //($("#result")).text(im.src)
+
+                    origin_images.push('./images/'+data.image_ret);
+                    adv_images.push('./images/'+data.image_ret);
+                    //sh1.src='./images/'+data.image_ret;
+                    ////($("#result")).text('./images/'+data.image_ret)
+                    //($("#result")).text(images.length);
+                    return false;
+                  })
+
+
+                   //  $.getJSON($SCRIPT_ROOT + '/_add_numbers', {
+                   //    a: 1,
+                   //    b: 2
+                   //  }) //, function(data) {
+                   //  $("#result").text(data.result);
+                   //});
+              },
+
+              onError: function (err) {
+                  console.log(err);
+              },
+              onComplete: function () {
+                  //changeImg();
+                  //var view = document.createTextNode("Done pulling images on route\n");
+                  //document.body.appendChild(view);
+                  console.log("Done pulling images on route");
+              }
+            });
+
+          }
+        </SCRIPT>
+
+        <script type=text/javascript>
+          $SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
+          $(function() {
+            $('a#calculate').bind('click', function() {
+              $.getJSON($SCRIPT_ROOT + '/_add_numbers', {
+                a: 1, //$('input[name="a"]').val(),
+                b: 2, //$('input[name="b"]').val()
+              }, function(data) {
+                $("#result").text(data.result);
+              });
+              return false;
+            });
+          });
+        </script>
+
+    </HEAD>
+    <BODY>
+       <!--
+       <h1>xxx</h1>
+       <p>Enter an origin and destination below along with a google maps api developer key. Usage rates will apply when pulling images.</p>
+       <p>Upon clicking go, the images along the provided route will be appended to the DOM.</p>
+       <p>This page is intended as a sample usage page to get started with.</p>
+       -->
+       <label for="origin">Origin</label>
+       <!--input type="text" value="OX1 4LQ" placeholder="origin" id="origin" /-->
+       <!--input type="text" value="OX4 1EA" placeholder="origin" id="origin" /-->
+       <input type="text" value="OX1 3QD" placeholder="origin" id="origin" />
+       <label for="destination">Destination</label>
+       <!--input type="text" value="OX1 4JU" placeholder="destination" id="destination" /-->
+       <!--input type="text" value="OX1 4AS" placeholder="destination" id="destination" /-->
+       <input type="text" value="OX1 3PN" placeholder="destination" id="destination" />
+       <label for="Google API Key">API Key</label>
+       <input type="text" placeholder="api key" id="apiKey" /> 
+       <input type="button" onclick="main()" value="Go" />
+
+       <h1>jQuery Example</h1>
+       <p><input type=text size=5 name=a> +
+          <input type=text size=5 name=b> =
+          <span id=result>?</span>
+       <p><a href=# id=calculate>calculate server side</a>
+
+    </BODY>
+</HTML>

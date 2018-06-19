@@ -1,0 +1,62 @@
+Total BFLOPS 65.864 
+
+ seen 64 
+Enter Image Path: ./streetview/01.jpg: Predicted in 12.659735 seconds.
+car: 98%
+car: 75%
+car: 99%
+car: 39%
+car: 53%
+car: 63%
+car: 35%
+car: 97%
+car: 99%
+person: 75%
+person: 88%
+person: 75%
+person: 64%
+fire hydrant: 61%
+person: 98%
+person: 99%
+backpack: 77%
+person: 100%
+Enter Image Path: ./streetview/02.jpg: Predicted in 12.594821 seconds.
+person: 100%
+Enter Image Path: ./streetview/03.jpg: Predicted in 13.591561 seconds.
+car: 100%
+car: 94%
+Enter Image Path: ./streetview/04.jpg: Predicted in 12.506790 seconds.
+car: 100%
+car: 54%
+truck: 33%
+car: 48%
+car: 97%
+car: 30%
+car: 55%
+car: 55%
+Enter Image Path: ./streetview/05.jpg: Predicted in 11.323594 seconds.
+car: 99%
+car: 91%
+car: 27%
+car: 61%
+car: 99%
+truck: 57%
+car: 89%
+car: 45%
+Enter Image Path: ./streetview/06.jpg: Predicted in 11.364348 seconds.
+car: 26%
+car: 99%
+car: 85%
+bus: 91%
+car: 63%
+Enter Image Path: ./streetview/07.jpg: Predicted in 11.181785 seconds.
+car: 32%
+truck: 64%
+car: 87%
+truck: 90%
+bus: 26%
+truck: 97%
+car: 42%
+bicycle: 27%
+person: 87%
+Enter Image Path: 
