@@ -43,22 +43,24 @@ def check_image():
 
   global count
 
-  #check_safety(count, https, l_pano, float(fov), float(heading), float(pitch), key)
-  check_robust_safety(count, https, l_pano, float(fov), float(heading), float(pitch), key)
+  print("check image")
+
+  is_safe=check_robust_safety(count, https, l_pano, float(fov), float(heading), float(pitch), key)
   count+=1
 
-
+  step_name='step{0}.png'.format(count-1)
   if count<=10:
-    return jsonify(image_ret='step0{0}.png'.format(count-1))
+    step_name='step0{0}.png'.format(count-1)
+
+  if is_safe:
+    return jsonify(image_ret=step_name.format(count-1), adv_image_ret='')
   else:
-    return jsonify(image_ret='step{0}.png'.format(count-1))
-  #return render_template('index.html', image_ret=jsonify(image_ret='step{0}.png'.format(count-1)))
+    return jsonify(image_ret=step_name, adv_image_ret='adv-'+step_name)
+
 
 @app.route("/images/<path:path>")
 def images(path):
-    # generate_img(path)
     fullpath = "./images/"+path
-    #print "the full path: ", fullpath
     resp = flask.make_response(open(fullpath).read())
     resp.content_type = "image/jpeg"
     return resp

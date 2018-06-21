@@ -40,7 +40,7 @@
               return;
             }
             var time=1000;
-            adv_view.src=origin_images[j];
+            adv_view.src=adv_images[j];
             if(j < adv_images.length - 1) j++;
             else j=0;
             setTimeout("show_adv_view()", time);
@@ -52,11 +52,11 @@
             document.body.appendChild(text1);
             document.body.appendChild(origin_view);
             show_origin_view();
-
-            //var text2 = document.createTextNode("Untrusted scenes: \n\n");
-            //document.body.appendChild(text2);
-            //document.body.appendChild(adv_view);
-            //show_adv_view();
+            ////
+            var text2 = document.createTextNode("These are the un-trusted scenes\n\n");
+            document.body.appendChild(text2);
+            document.body.appendChild(adv_view);
+            show_adv_view();
 
             new StreetViewImages({
               origin: document.getElementById("origin").value,
@@ -76,26 +76,13 @@
                      key: pano.key
                   }
                   , function(data) {
-                    //im = document.createElement("img");
-                    //im.src='./images/'+data.image_ret;
-                    //document.body.appendChild(im);
-                    //($("#result")).text(im.src)
 
                     origin_images.push('./images/'+data.image_ret);
-                    adv_images.push('./images/'+data.image_ret);
-                    //sh1.src='./images/'+data.image_ret;
-                    ////($("#result")).text('./images/'+data.image_ret)
-                    //($("#result")).text(images.length);
+                    if (data.adv_image_ret!="")
+                      adv_images.push('./images/'+data.adv_image_ret);
                     return false;
                   })
 
-
-                   //  $.getJSON($SCRIPT_ROOT + '/_add_numbers', {
-                   //    a: 1,
-                   //    b: 2
-                   //  }) //, function(data) {
-                   //  $("#result").text(data.result);
-                   //});
               },
 
               onError: function (err) {
@@ -147,11 +134,13 @@
        <input type="text" placeholder="api key" id="apiKey" /> 
        <input type="button" onclick="main()" value="Go" />
 
+       <!--
        <h1>jQuery Example</h1>
        <p><input type=text size=5 name=a> +
           <input type=text size=5 name=b> =
           <span id=result>?</span>
        <p><a href=# id=calculate>calculate server side</a>
+       -->
 
     </BODY>
 </HTML>

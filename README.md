@@ -1,7 +1,7 @@
 # TrustRover
 
 ## To run
-**  python3 app.py
+**  python app.py
 
 Type http://localhost:5000/ in your favourite and choose the route you want to play,
 simply filling the start and destination and clicking the button.

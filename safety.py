@@ -46,44 +46,42 @@ def check_robust_safety(step, https, pano, fov, heading, pitch, key):
   os.system("./darknet detect cfg/yolov3-tiny.cfg yolov3-tiny.weights ./{0}/{1} > ./{0}/logs".format(step, img))
   labels=read_yolo_labels("./{0}/logs".format(step))
   os.system("cp predictions.png ./{0}/{1}".format(step, img))
-  os.system("cp predictions.png ./{0}/0.png".format(step))
   if step>9:
     os.system("cp predictions.png ./images/step{0}.png".format(step))
   else:
     os.system("cp predictions.png ./images/step0{0}.png".format(step))
 
-  ### heading +/- 
-  #delta=0.1
-  #sigma=0.01
-  ##for h in np.arange(heading-delta, heading+delta+sigma, sigma):
-  #for x in np.arange(sigma, delta, sigma):
-  #  adv_found=False
-  #  for b in range(0, 2):
-  #    if b==0: h=heading+x
-  #    else: h=heading-x
-  #    #print '####', (h-heading)
-  #    url='{0}&pano={1}&fov={2}&heading={3}&pitch={4}&key={5}'.format(https, pano, fov, h, pitch, key)
-  #    ## the image name
-  #    img="fov{0}heading{1}pitch{2}.png".format(fov, h, pitch)
-  #    urlretrieve(url,  "./{0}/{1}".format(step, img)) 
-  #    os.system("./darknet detect cfg/yolov3.cfg yolov3.weights ./{0}/{1} > ./{0}/logs".format(step, img))
-  #    h_labels=read_yolo_labels("./{0}/logs".format(step))
-  #    if not (labels==h_labels):
-  #      os.system("rm ./{0}/{1}".format(step, img))
-  #      os.system("cp predictions.png ./{0}/adv-{1}".format(step, img))
-  #      print h_labels, labels
-  #      if step>9:
-  #        os.system("cp predictions.png ./adv-images/step{0}.png".format(step, step))
-  #      else:
-  #        os.system("cp predictions.png ./adv-images/step0{0}.png".format(step, step))
-  #      adv_found=True
-  #      break
-  #    else:
-  #      os.system("rm ./{0}/{1}".format(step, img))
-  #      #os.system("cp predictions.png ./{0}/{1}".format(step, img))
-  #  if adv_found: break
+  ## heading +/- 
+  delta=0.1
+  sigma=0.01
+  for x in np.arange(sigma, delta, sigma):
+    adv_found=False
+    for b in range(0, 2):
+      if b==0: h=heading+x
+      else: h=heading-x
+      #print '####', (h-heading)
+      url='{0}&pano={1}&fov={2}&heading={3}&pitch={4}&key={5}'.format(https, pano, fov, h, pitch, key)
+      ## the image name
+      img="fov{0}heading{1}pitch{2}.png".format(fov, h, pitch)
+      urlretrieve(url,  "./{0}/{1}".format(step, img)) 
+      ##os.system("./darknet detect cfg/yolov3.cfg yolov3.weights ./{0}/{1} > ./{0}/logs".format(step, img))
+      os.system("./darknet detect cfg/yolov3-tiny.cfg yolov3-tiny.weights ./{0}/{1} > ./{0}/logs".format(step, img))
+      h_labels=read_yolo_labels("./{0}/logs".format(step))
+      if not (labels==h_labels):
+        os.system("rm ./{0}/{1}".format(step, img))
+        os.system("cp predictions.png ./{0}/adv-{1}".format(step, img))
+        print h_labels, labels
+        if step>9:
+          os.system("cp predictions.png ./images/adv-step{0}.png".format(step, step))
+        else:
+          os.system("cp predictions.png ./images/adv-step0{0}.png".format(step, step))
+        adv_found=True
+        break
+      else:
+        os.system("rm ./{0}/{1}".format(step, img))
+    if adv_found: return False
 
-  ##os.system("cp predictions.png ./{0}".format(step))
-  ##os.system("cp predictions.png ./images/step{0}.png".format(step))
+  return True
+
 
 
