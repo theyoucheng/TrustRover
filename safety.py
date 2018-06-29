@@ -82,4 +82,4 @@ def check_safety_dflow(step, https, pano, fov, heading, pitch, key):
                 os.system("rm ./{0}/{1}".format(step, img))
         if adv_found: return False
 
-    return True
+    return True 
