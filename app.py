@@ -1,8 +1,7 @@
 from flask import Flask, render_template
 from flask import jsonify, request
 import flask
-from safety import check_safety
-from safety import check_robust_safety
+from safety import check_safety_dflow
 import base64
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from matplotlib.figure import Figure
@@ -30,7 +29,7 @@ def add_numbers():
 
 @app.route('/_check_image')
 def check_image():
-  
+
   u = request.args.get('u', 0, type=str)
 
 
@@ -45,7 +44,7 @@ def check_image():
 
   print("check image")
 
-  is_safe=check_robust_safety(count, https, l_pano, float(fov), float(heading), float(pitch), key)
+  is_safe=check_safety_dflow(count, https, l_pano, float(fov), float(heading), float(pitch), key)
   count+=1
 
   step_name='step{0}.png'.format(count-1)
@@ -61,7 +60,7 @@ def check_image():
 @app.route("/images/<path:path>")
 def images(path):
     fullpath = "./images/"+path
-    resp = flask.make_response(open(fullpath).read())
+    resp = flask.make_response(open(fullpath, encoding='latin1').read())
     resp.content_type = "image/jpeg"
     return resp
 
