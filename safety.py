@@ -22,7 +22,7 @@ def write_boundingboxes(results, imgcv):
         cv2.rectangle(imgcv,
                      (result["topleft"]["x"], result["topleft"]["y"]),
                      (result["bottomright"]["x"],result["bottomright"]["y"]),
-                     (0, 255, 0), 4)
+                     (0, 255, 0), 2)
         text_x, text_y = int(result["topleft"]["x"]) - 10, int(result["topleft"]["y"]) - 10
         cv2.putText(imgcv, result["label"], (text_x, text_y),cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2, cv2.LINE_AA)
     cv2.imwrite("prediction.png", imgcv)
