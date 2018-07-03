@@ -50,8 +50,9 @@
             var center = document.getElementById("center");
             var br = document.createElement('br');
             var text1 = document.createTextNode("This will be the view by your self-driving car\n\n");
-            center.appendChild(text1);
             center.appendChild(br);
+            center.appendChild(text1);
+            center.appendChild(br.cloneNode());
             center.appendChild(origin_view);
             center.appendChild(br.cloneNode());
             show_origin_view();
