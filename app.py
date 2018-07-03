@@ -60,7 +60,8 @@ def check_image():
 @app.route("/images/<path:path>")
 def images(path):
     fullpath = "./images/"+path
-    resp = flask.make_response(open(fullpath, encoding='latin1').read())
+    with open(fullpath, 'rb') as f:
+        resp = flask.make_response(f.read())
     resp.content_type = "image/jpeg"
     return resp
 
