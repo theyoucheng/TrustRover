@@ -4,8 +4,6 @@ import flask
 from safety import check_safety_dflow
 from safety import imgTogif
 import base64
-import imageio
-import json
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from matplotlib.figure import Figure
 from matplotlib.dates import DateFormatter
