@@ -10,6 +10,8 @@
           $SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
           var origin_images=[];
           var adv_images=[];
+          var gif=[];
+          var adv_gif=[];
           var i=0;
           var j=0;
 
@@ -21,29 +23,21 @@
           adv_view.width=300;
 
           function show_origin_view(){
-            if (origin_images.length<=0)
+            if (gif.length<=0)
             {
-              setTimeout("show_origin_view()", time);
+              setTimeout("show_origin_view()", 1000);
               return;
             }
-            var time=1000;
-            origin_view.src=origin_images[i];
-            if(i < origin_images.length - 1) i++;
-            else i=0;
-            setTimeout("show_origin_view()", time);
+            origin_view.src=gif[0];
           }
 
           function show_adv_view(){
-            if (adv_images.length<=0)
+            if (adv_gif.length<=0)
             {
-              setTimeout("show_adv_view()", time);
+              setTimeout("show_adv_view()", 1000);
               return;
             }
-            var time=1000;
-            adv_view.src=adv_images[j];
-            if(j < adv_images.length - 1) j++;
-            else j=0;
-            setTimeout("show_adv_view()", time);
+            adv_view.src=adv_gif[0];
           }
 
           function main() {
@@ -82,10 +76,11 @@
                      key: pano.key
                   }
                   , function(data) {
-
                     origin_images.push("./images/"+data.image_ret);
+                    gif.push(data.img_gif_ret);
                     if (data.adv_image_ret!="")
                       adv_images.push("./images/"+data.adv_image_ret);
+                      adv_gif.push(data.adv_gif_ret);
                     return false;
                   })
 
@@ -101,6 +96,7 @@
                   console.log("Done pulling images on route");
               }
             });
+
 
           }
         </SCRIPT>
