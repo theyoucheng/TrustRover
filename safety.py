@@ -28,7 +28,7 @@ def check_label(results, adv_results):
                     if(advresult['bottomright']['x']-5<result['bottomright']['x']<advresult['bottomright']['x']+5 and advresult['bottomright']['y']-5<result['bottomright']['y']<advresult['bottomright']['y']+5):
                         deviant = False
         if deviant:
-            result['label'] = "deviant"
+            result['label'] = "deviant: "+result['label']
 
     for advresult in adv_results:
         deviant = True;
@@ -38,7 +38,7 @@ def check_label(results, adv_results):
                     if(result['bottomright']['x']-5<advresult['bottomright']['x']<result['bottomright']['x']+5 and result['bottomright']['y']-5<advresult['bottomright']['y']<result['bottomright']['y']+5):
                         deviant = False
         if deviant:
-            advresult['label'] = "deviant"
+            advresult['label'] = "deviant: "+advresult['label']
 
 
 ## Added different colours for common detected objects
@@ -46,8 +46,10 @@ def check_label(results, adv_results):
 def decide_box_colour(str):
     colour_list=[{"label":"person","colour":(255,0,0)},{"label":"bicycle","colour":(0,255,0)},{"label":"car","colour":(0,0,255)},
                  {"label":"bus","colour":(242,198,90)},{"label":"truck","colour":(144,75,154)},{"label":"motorbike","colour":(237,155,16)},
-                 {"label":"traffic light", "colour":(255,255,0)},{"label":"deviant", "colour":(0,0,0)]
+                 {"label":"traffic light", "colour":(255,255,0)}]
     colour = (123,123,123)
+    if str.startswith("deviant"):
+        colour = (0,0,0)
     for color in colour_list:
         if (str == color["label"]):
             colour = color["colour"]
