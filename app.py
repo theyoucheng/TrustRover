@@ -1,8 +1,10 @@
 from flask import Flask, render_template
 from flask import jsonify, request
 import flask
-from safety import check_safety
-from safety import check_robust_safety
+from safety import check_safety_dflow
+from safety import imgTogif
+from safety import darkflow_check
+from darkflow.net.build import TFNet
 import base64
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from matplotlib.figure import Figure
@@ -10,10 +12,15 @@ from matplotlib.dates import DateFormatter
 
 import urllib
 count=0
+origin_images=[]
+adv_images=[]
+new_heading = 0
+
+options = {"model": "cfg/yolo.cfg", "load": "bin/yolo.weights", "threshold": 0.4}
+tfnet = TFNet(options)
 
 app=Flask(__name__)
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
-
 
 app.debug=True
 
@@ -30,7 +37,7 @@ def add_numbers():
 
 @app.route('/_check_image')
 def check_image():
-  
+
   u = request.args.get('u', 0, type=str)
 
 
@@ -45,24 +52,24 @@ def check_image():
 
   print("check image")
 
-  is_safe=check_robust_safety(count, https, l_pano, float(fov), float(heading), float(pitch), key)
+  new_heading = darkflow_check(count, https, l_pano, float(fov), float(heading), float(pitch), key, tfnet)
   count+=1
 
   step_name='step{0}.png'.format(count-1)
   if count<=10:
     step_name='step0{0}.png'.format(count-1)
 
-  if is_safe:
-    return jsonify(image_ret=step_name.format(count-1), adv_image_ret='')
-  else:
-    return jsonify(image_ret=step_name, adv_image_ret='adv-'+step_name)
-
+  origin_images.append('./images/'+step_name)
+  adv_images.append('./images/adv-'+step_name)
+  imgTogif(origin_images, adv_images)
+  return jsonify(image_ret=step_name, adv_image_ret='adv-'+step_name, img_gif_ret='./images/img_out.gif',adv_gif_ret='./images/adv_out.gif',new_h = new_heading)
 
 @app.route("/images/<path:path>")
 def images(path):
     fullpath = "./images/"+path
-    resp = flask.make_response(open(fullpath).read())
-    resp.content_type = "image/jpeg"
+    with open(fullpath, 'rb') as f:
+        resp = flask.make_response(f.read())
+    resp.content_type = "image/gif"
     return resp
 
 if __name__=='__main__':

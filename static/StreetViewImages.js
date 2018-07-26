@@ -24,8 +24,8 @@ function StreetViewImages(options) {
     var m_aVertices = [];
     //var m_iSensitivity = 50;
     //var m_iSpeed = 1000;
-    var m_iSensitivity = 50;
-    var m_iSpeed = 100;
+    var m_iSensitivity = 10;
+    var m_iSpeed = 5;
 
     (new google.maps.DirectionsService).route({
         origin: m_sOrigin,
@@ -83,7 +83,7 @@ function StreetViewImages(options) {
                         l_pano: panoData.location.pano,
                         fov: "90",
                         heading: bearingTo(vertex, m_aVertices[0] || vertex),
-                        pitch: "0",
+                        pitch: "10",
                         key: m_sApiKey,
 
                         panoUrl: [
@@ -91,7 +91,7 @@ function StreetViewImages(options) {
                             "pano=" + panoData.location.pano,
                             "fov=90",
                             "heading=" + bearingTo(vertex, m_aVertices[0] || vertex),
-                            "pitch=0",
+                            "pitch=10",
                             "key=" + m_sApiKey
                         ].join("&")
                     });
@@ -111,4 +111,3 @@ function StreetViewImages(options) {
 
 
 window.StreetViewImages = StreetViewImages;
-
