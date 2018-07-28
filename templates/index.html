@@ -3,7 +3,7 @@
     <HEAD>
         <TITLE>TR Project</TITLE>
         <style>
-        html, body, #ggmap{
+        html, body, #imgdiv ,#ggmap{
           margin: 0;
           padding: 0;
           height: 100%;
@@ -11,7 +11,7 @@
         }
         #ggmap{
           position: absolute;
-          overflow: visible;
+          overflow: hidden;
         }
         </style>
         <SCRIPT src="http://maps.google.com/maps/api/js?sensor=false" type="text/javascript"></SCRIPT>
@@ -27,6 +27,7 @@
           var i=0;
           var j=0;
           var locations=[];
+          var adj_locations=[];
           var ori_headings=[];
           var new_headings=[];
           origin_view = document.createElement("img");
@@ -60,21 +61,25 @@
 
           function main() {
             var center = document.getElementById("center");
+            var imgdiv = document.createElement('div');
+            imgdiv.id = "imgdiv";
+            center.appendChild(imgdiv);
             var br = document.createElement('br');
             var text1 = document.createTextNode("This will be the view by your self-driving car\n\n");
-            center.appendChild(br);
-            center.appendChild(text1);
-            center.appendChild(br.cloneNode());
-            center.appendChild(origin_view);
-            center.appendChild(br.cloneNode());
+            imgdiv.appendChild(br);
+            imgdiv.appendChild(text1);
+            imgdiv.appendChild(br.cloneNode());
+            imgdiv.appendChild(origin_view);
+            imgdiv.appendChild(br.cloneNode());
             show_origin_view();
 
             ////
             var text2 = document.createTextNode("These are the views after adjusting the heading\n\n");
-            center.appendChild(text2);
-            center.appendChild(br.cloneNode());
-            center.appendChild(adv_view);
-            center.appendChild(br.cloneNode());
+            imgdiv.appendChild(text2);
+            imgdiv.appendChild(br.cloneNode());
+            imgdiv.appendChild(adv_view);
+            imgdiv.appendChild(br.cloneNode());
+            imgdiv.appendChild(br.cloneNode());
             show_adv_view();
 
             var div = document.createElement('div');
@@ -108,6 +113,30 @@
                     gif.push(data.img_gif_ret);
                     adv_gif.push(data.adv_gif_ret);
                     new_headings.push(data.new_h);
+
+                    step = new_headings.length - 1;
+                    if(ori_headings[step] != new_headings[step] && step<23){
+                      earth_r = 6378100;
+                      delta_heading = Math.abs(ori_headings[step]-new_headings[step]);
+                      r = 23.9 * Math.sin(delta_heading);
+                      bearing = (Math.PI / 180) * new_headings[step];
+                      lat1 = locations[step].lat * (Math.PI/180);
+                      lng1 = locations[step].lng * (Math.PI/180);
+                      lat2 = Math.asin(Math.sin(lat1)*Math.cos(r/earth_r)+Math.cos(lat1)*Math.sin(r/earth_r)*Math.cos(bearing));
+                      lng2 = lng1+Math.atan2(Math.sin(bearing)*Math.sin(r/earth_r)*Math.cos(lat1), Math.cos(r/earth_r)-Math.sin(lat1)*Math.sin(lat2));
+                      lat2 = lat2 * (180/ Math.PI);
+                      lng2 = lng2 * (180/ Math.PI);
+                      adj_locations.push(locations[step]);
+                      adj_locations.push({lat: lat2, lng: lng2});
+                    }else{
+                      adj_locations.push(locations[step]);
+                    }
+
+                    console.log(adj_locations);
+                    if(step == 23){
+                      initMap();
+                    }
+
                     return false;
                   })
 
@@ -121,10 +150,6 @@
                   //var view = document.createTextNode("Done pulling images on route\n");
                   //document.body.appendChild(view);
                   console.log("Done pulling images on route");
-                  setTimeout(function(){
-                    initMap();
-                    console.log("trying to load the map");
-                  },5000);
               }
             });
 
@@ -143,6 +168,14 @@
               strokeOpacity: 1.0,
               strokeWeight: 2
             });
+            var adv_path = new google.maps.Polyline({
+              path: adj_locations,
+              geodesic: true,
+              strokeColor: '#28B463',
+              strokeOpacity: 1.0,
+              strokeWeight: 2
+            });
+            adv_path.setMap(map);
             path.setMap(map);
           }
 
