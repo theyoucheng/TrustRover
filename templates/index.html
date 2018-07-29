@@ -115,7 +115,7 @@
                     new_headings.push(data.new_h);
 
                     step = new_headings.length - 1;
-                    if(ori_headings[step] != new_headings[step] && step<23){
+                    if(ori_headings[step] != new_headings[step] && step<locations.length-1){
                       earth_r = 6378100;
                       delta_heading = Math.abs(ori_headings[step]-new_headings[step]);
                       r = 23.9 * Math.sin(delta_heading);
@@ -133,7 +133,7 @@
                     }
 
                     console.log(adj_locations);
-                    if(step == 23){
+                    if(step == locations.length - 1){
                       initMap();
                     }
 
