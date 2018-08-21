@@ -1,6 +1,7 @@
 import os
 import sys
 from util import *
+import math
 ## Need Python version > 2.7
 from collections import Counter
 import numpy as np
@@ -22,17 +23,25 @@ else:
 import base64
 
 def check_inside(results):
+    closest = 0
     for result in results:
         inside = False
         point1 = Point(result['topleft']['x'], result['topleft']['y'])
         point2 = Point(result['bottomright']['x'], result['bottomright']['y'])
         poly = Polygon([(320,370),(640,470),(640,640),(0,640),(0,525)])
+        distance = 640 - result['bottomright']['y']
         if poly.contains(point1):
             inside = True
         if poly.contains(point2):
             inside = True
         if inside:
-            result['label'] = 'danger: '+result['label']
+            meters = math.pow(2, distance/27)/10
+            result['label'] = 'danger: '+result['label']+' ('+f'{meters:.3f}'+'m)'
+            if closest == 0 or closest>meters:
+                closest = meters
+    if closest == 0: acc = 0
+    else: acc = -(25*25)/(2*closest)
+    return acc
 
 
 def check_label(results, adv_results):
@@ -234,8 +243,12 @@ def darkflow_check(step, https, pano, fov, heading, pitch, key, tfnet):
     urlretrieve(url, "./{0}/{1}".format(step, img))
     ori_imgcv = cv2.imread("./{0}/{1}".format(step, img))
     results = tfnet.return_predict(ori_imgcv)
-    check_inside(results)
+    acc = check_inside(results)
+    acctext = "The accelaration must < "+f'{acc:.2f}'+"m/t^2"
     write_boundingboxes(results, ori_imgcv)
+    predic = cv2.imread("prediction.png")
+    cv2.putText(predic, acctext, (50, 50),cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0,0,255), 1, cv2.LINE_AA)
+    cv2.imwrite("prediction.png",predic)
     os.system("cp prediction.png ./{0}/{1}".format(step, img))
     if step>9:
         os.system("cp prediction.png ./images/step{0}.png".format(step))
