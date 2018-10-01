@@ -9,12 +9,30 @@ import base64
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from matplotlib.figure import Figure
 from matplotlib.dates import DateFormatter
+import csv
 
 import urllib
+class Path:
+
+    def __init__(self, name):
+        self.name = name
+        self.headings = []
+        self.objects = []
+
+    def add_heading(self, heading):
+        self.headings.append(heading)
+
+    def add_object(self, object):
+        self.objects.append(object)
+
 count=0
 origin_images=[]
 adv_images=[]
+difference_heading=[]
+difference_object=[]
 new_heading = 0
+ori_path = Path('Original')
+adv_path = Path('Adv')
 
 options = {"model": "cfg/yolo.cfg", "load": "bin/yolo.weights", "threshold": 0.4}
 tfnet = TFNet(options)
@@ -37,6 +55,8 @@ def add_numbers():
 
 @app.route('/_check_image')
 def check_image():
+  ori_l=[]
+  adv_l=[]
 
   u = request.args.get('u', 0, type=str)
 
@@ -48,16 +68,47 @@ def check_image():
   pitch = request.args.get('pitch', 0, type=str)
   key = request.args.get('key', 0, type=str)
 
+  ori_path.add_heading(heading)
+
   global count
 
   print("check image")
 
-  new_heading = darkflow_check(count, https, l_pano, float(fov), float(heading), float(pitch), key, tfnet)
+  results = darkflow_check(count, https, l_pano, float(fov), float(heading), float(pitch), key, tfnet)
+  adv_heading = results[2]
   count+=1
-
+  for result in results[0]:
+    ori_l.append(result['label'])
+  for result in results[1]:
+    adv_l.append(result['label'])
+  ori_path.add_object(ori_l)
+  adv_path.add_object(adv_l)
+  adv_path.add_heading(adv_heading)
+  zipped = zip(ori_path.headings, adv_path.headings)
   step_name='step{0}.png'.format(count-1)
   if count<=10:
     step_name='step0{0}.png'.format(count-1)
+
+  with open('headings.csv','w') as f:
+    writer = csv.writer(f, delimiter='\t')
+    writer.writerows(zipped)
+
+  difference_heading.append(adv_heading - float(heading))
+
+  with open('heading_difference.txt','w') as f:
+    for heading in difference_heading:
+        f.write("%f\n" % heading)
+
+  zip_obj = zip(ori_path.objects, adv_path.objects)
+  with open('objects.csv','w') as f:
+    writer = csv.writer(f, delimiter='\t')
+    writer.writerows(zip_obj)
+
+  difference_object.append(set(ori_l).symmetric_difference(set(adv_l)))
+
+  with open('object_difference.csv','w') as f:
+    writer = csv.writer(f)
+    writer.writerows(difference_object)
 
   origin_images.append('./images/'+step_name)
   adv_images.append('./images/adv-'+step_name)
