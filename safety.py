@@ -279,4 +279,4 @@ def darkflow_check(step, https, pano, fov, heading, pitch, key, tfnet):
     else:
         os.system("cp prediction.png ./images/adv-step0{0}.png".format(step))
 
-    return adj_heading
+    return (results, adv_results, adj_heading)
