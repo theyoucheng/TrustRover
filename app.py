@@ -25,7 +25,7 @@ class Path:
     def add_object(self, object):
         self.objects.append(object)
 
-count=0
+count=-1
 origin_images=[]
 adv_images=[]
 difference_heading=[]
@@ -72,7 +72,10 @@ def check_image():
 
   global count
 
-  print("check image")
+
+  count+=1
+  check_safety_dflow(count, https, l_pano, float(fov), float(heading), float(pitch), key, tfnet)
+  return
 
   results = darkflow_check(count, https, l_pano, float(fov), float(heading), float(pitch), key, tfnet)
   adv_heading = results[2]

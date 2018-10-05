@@ -36,9 +36,11 @@ def check_inside(results):
             inside = True
         if inside:
             meters = math.pow(2, distance/27)/10
-            result['label'] = 'danger: '+result['label']+' ('+f'{meters:.3f}'+'m)'
+            #result['label'] = 'danger: '+result['label']+' ('+f'{meters:.3f}'+'m)'
             if closest == 0 or closest>meters:
                 closest = meters
+        else:
+            result['label'] = ''
     if closest == 0: acc = 0
     else: acc = -(25*25)/(2*closest)
     return acc
@@ -81,9 +83,11 @@ def decide_box_colour(str):
 def write_boundingboxes(results, imgcv):
     cv2.imwrite("prediction.png", imgcv)
     imgcv = cv2.imread("prediction.png")
+    ## ROI: region of interest
     vtx = np.array([[320,370],[640,470],[640,640],[0,640],[0,525]], np.int32)
     cv2.polylines(imgcv, [vtx], True, (0,255,255), 2)
     for result in results:
+        if result['label']=='': continue
         cv2.rectangle(imgcv,
                      (result["topleft"]["x"], result["topleft"]["y"]),
                      (result["bottomright"]["x"],result["bottomright"]["y"]),
@@ -92,25 +96,64 @@ def write_boundingboxes(results, imgcv):
         cv2.putText(imgcv, result["label"], (text_x, text_y),cv2.FONT_HERSHEY_SIMPLEX, 0.8, decide_box_colour(result["label"]), 2, cv2.LINE_AA)
     cv2.imwrite("prediction.png", imgcv)
 
+## To draw the bounding boxes for detected objects
+def new_write_boundingboxes(results, imgcv, new_img):
+    cv2.imwrite(new_img, imgcv)
+    imgcv = cv2.imread(new_img)
+    ## ROI: region of interest
+    vtx = np.array([[320,370],[640,470],[640,640],[0,640],[0,525]], np.int32)
+    cv2.polylines(imgcv, [vtx], True, (0,255,255), 2)
+    for result in results:
+        if result['label']=='': continue
+        cv2.rectangle(imgcv,
+                     (result["topleft"]["x"], result["topleft"]["y"]),
+                     (result["bottomright"]["x"],result["bottomright"]["y"]),
+                     decide_box_colour(result["label"]), 2)
+        text_x, text_y = int(result["topleft"]["x"]) - 10, int(result["topleft"]["y"]) - 10
+        cv2.putText(imgcv, result["label"], (text_x, text_y),cv2.FONT_HERSHEY_SIMPLEX, 0.8, decide_box_colour(result["label"]), 2, cv2.LINE_AA)
+    cv2.imwrite(new_img, imgcv)
+
 ## check safety using darkflow
 def check_safety_dflow(step, https, pano, fov, heading, pitch, key, tfnet):
+
     if not os.path.exists(str(step)):
         os.makedirs(str(step))
     else:
         print('step {0} exists'.format(step))
 
-
-
+    ## image url
     url='{0}&pano={1}&fov={2}&heading={3}&pitch={4}&key={5}'.format(https, pano, fov, heading, pitch, key)
-    img = "fov{0}heading{1}pitch{2}.png".format(fov, heading, pitch)
-    urlretrieve(url, "./{0}/{1}".format(step, img))
-    ori_imgcv = cv2.imread("./{0}/{1}".format(step, img))
-    results = tfnet.return_predict(ori_imgcv)
-    write_boundingboxes(results, ori_imgcv)
+    ## image name
+    img = 'step{0}.png'.format(step) #"fov{0}heading{1}pitch{2}".format(fov, heading, pitch)
+    origin_img = 'origin_step{0}'.format(step) #"fov{0}heading{1}pitch{2}".format(fov, heading, pitch)
+    ## to retrieve the image
+    urlretrieve(url, "./{0}/{1}".format(step, origin_img))
+
+
+    ## the image is read
+    imgcv = cv2.imread("./{0}/{1}".format(step, origin_img))
+    ## let's predict
+    results = tfnet.return_predict(imgcv)
+
+    print ('\n')
+    print (results)
+    print ('\n')
+
+
+    check_inside(results)
+    ## draw the bounding box
+    new_write_boundingboxes(results, imgcv, './{0}/{1}'.format(step, img))
     origin_labels = []
     for result in results:
-        origin_labels.append(result["label"])
-    os.system("cp prediction.png ./{0}/{1}".format(step, img))
+        if not result['label']=='':
+          origin_labels.append(result["label"])
+    #if len(results)>0:
+    #  os.system("cp prediction.png ./{0}/{1}".format(step, img))
+    #else:
+    #  os.system("cp ./{0}/{2} ./{0}/{1}".format(step, img, origin_img))
+
+    return 
+
     if step>9:
         os.system("cp prediction.png ./images/step{0}.png".format(step))
     else:
@@ -125,13 +168,15 @@ def check_safety_dflow(step, https, pano, fov, heading, pitch, key, tfnet):
             if b==0: h=heading+x
             else: h=heading-x
             url = '{0}&pano={1}&fov={2}&heading={3}&pitch={4}&key={5}'.format(https, pano, fov, h, pitch, key)
-            advimg = "fov{0}heading{1}pitch{2}.png".format(fov, h, pitch)
+            advimg = "heading_fov{0}heading{1}pitch{2}.png".format(fov, h, pitch)
             urlretrieve(url, "./{0}/{1}".format(step, advimg))
             adv_imgcv = cv2.imread("./{0}/{1}".format(step, advimg))
             adv_results = tfnet.return_predict(adv_imgcv)
+            check_inside(adv_results)
             adv_labels = []
             for result in adv_results:
-                adv_labels.append(result["label"])
+                if not result['label']=='':
+                  adv_labels.append(result["label"])
             if not (Counter(origin_labels)==Counter(adv_labels)):
                 check_label(results, adv_results)
                 write_boundingboxes(results, ori_imgcv)
@@ -146,12 +191,15 @@ def check_safety_dflow(step, https, pano, fov, heading, pitch, key, tfnet):
                     os.system("cp prediction.png ./images/adv-step{0}.png".format(step))
                 else:
                     os.system("cp prediction.png ./images/adv-step0{0}.png".format(step))
-                os.system("rm ./{0}/{1}".format(step, advimg))
+                #os.system("rm ./{0}/{1}".format(step, advimg))
                 adv_found = True
                 break
-            else:
-                os.system("rm ./{0}/{1}".format(step, advimg))
+            #else:
+            #    os.system("rm ./{0}/{1}".format(step, advimg))
         if adv_found: return False
+
+    ## to be continued 
+    return True
 
     for x in np.arange(sigma, delta, sigma):
         for b in range(0, 2):
@@ -233,23 +281,34 @@ def imgTogif(origin_images, adv_images):
         imageio.mimsave('./images/adv_out.gif',adv_list, duration=1)
 
 def darkflow_check(step, https, pano, fov, heading, pitch, key, tfnet):
+
     if not os.path.exists(str(step)):
         os.makedirs(str(step))
     else:
         print('step {0} exists'.format(step))
 
     url='{0}&pano={1}&fov={2}&heading={3}&pitch={4}&key={5}'.format(https, pano, fov, heading, pitch, key)
+    ## the image name
     img = "fov{0}heading{1}pitch{2}.png".format(fov, heading, pitch)
+    ## to retrieve the image
     urlretrieve(url, "./{0}/{1}".format(step, img))
+    ## the retrieved image
     ori_imgcv = cv2.imread("./{0}/{1}".format(step, img))
+    ## the object detection
     results = tfnet.return_predict(ori_imgcv)
+    ## check these objects inside the region of interest
     acc = check_inside(results)
     acctext = "The accelaration must < "+f'{acc:.2f}'+"m/t^2"
+    ## draw the bounding box
     write_boundingboxes(results, ori_imgcv)
+    #### why???
     predic = cv2.imread("prediction.png")
     cv2.putText(predic, acctext, (50, 50),cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0,0,255), 1, cv2.LINE_AA)
     cv2.imwrite("prediction.png",predic)
     os.system("cp prediction.png ./{0}/{1}".format(step, img))
+    ####
+    #### to copy into the images archieve
+    print ('== to copy into the images archieve')
     if step>9:
         os.system("cp prediction.png ./images/step{0}.png".format(step))
     else:
@@ -258,7 +317,7 @@ def darkflow_check(step, https, pano, fov, heading, pitch, key, tfnet):
     distance = 0
     adj_heading = 0
     for result in results:
-        if result['label'].startswith("danger"):
+        if not result['label']=='': #result['label'].startswith("danger"):
             obj_pos = (result['bottomright']['x']+result['topleft']['x'])/2
             distance += (320 - obj_pos)
             if distance > 0:
