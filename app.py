@@ -72,51 +72,60 @@ def check_image():
 
   global count
 
-
   count+=1
-  check_safety_dflow(count, https, l_pano, float(fov), float(heading), float(pitch), key, tfnet)
-  return
+  step_name='step{0}.png'.format(count)
+  if count<10:
+    step_name='step0{0}.png'.format(count)
+  adv_found=check_safety_dflow(count, https, l_pano, float(fov), float(heading), float(pitch), key, tfnet)
 
-  results = darkflow_check(count, https, l_pano, float(fov), float(heading), float(pitch), key, tfnet)
-  adv_heading = results[2]
-  count+=1
-  for result in results[0]:
-    ori_l.append(result['label'])
-  for result in results[1]:
-    adv_l.append(result['label'])
-  ori_path.add_object(ori_l)
-  adv_path.add_object(adv_l)
-  adv_path.add_heading(adv_heading)
-  zipped = zip(ori_path.headings, adv_path.headings)
-  step_name='step{0}.png'.format(count-1)
-  if count<=10:
-    step_name='step0{0}.png'.format(count-1)
+  #results = darkflow_check(count, https, l_pano, float(fov), float(heading), float(pitch), key, tfnet)
+  #adv_heading = results[2]
+  #count+=1
+  #for result in results[0]:
+  #  ori_l.append(result['label'])
+  #for result in results[1]:
+  #  adv_l.append(result['label'])
+  #ori_path.add_object(ori_l)
+  #adv_path.add_object(adv_l)
+  #adv_path.add_heading(adv_heading)
+  #zipped = zip(ori_path.headings, adv_path.headings)
 
-  with open('headings.csv','w') as f:
-    writer = csv.writer(f, delimiter='\t')
-    writer.writerows(zipped)
+  #with open('headings.csv','w') as f:
+  #  writer = csv.writer(f, delimiter='\t')
+  #  writer.writerows(zipped)
 
-  difference_heading.append(adv_heading - float(heading))
+  #difference_heading.append(adv_heading - float(heading))
 
-  with open('heading_difference.txt','w') as f:
-    for heading in difference_heading:
-        f.write("%f\n" % heading)
+  #with open('heading_difference.txt','w') as f:
+  #  for heading in difference_heading:
+  #      f.write("%f\n" % heading)
 
-  zip_obj = zip(ori_path.objects, adv_path.objects)
-  with open('objects.csv','w') as f:
-    writer = csv.writer(f, delimiter='\t')
-    writer.writerows(zip_obj)
+  #zip_obj = zip(ori_path.objects, adv_path.objects)
+  #with open('objects.csv','w') as f:
+  #  writer = csv.writer(f, delimiter='\t')
+  #  writer.writerows(zip_obj)
 
-  difference_object.append(set(ori_l).symmetric_difference(set(adv_l)))
+  #difference_object.append(set(ori_l).symmetric_difference(set(adv_l)))
 
-  with open('object_difference.csv','w') as f:
-    writer = csv.writer(f)
-    writer.writerows(difference_object)
+  #with open('object_difference.csv','w') as f:
+  #  writer = csv.writer(f)
+  #  writer.writerows(difference_object)
+
+  #origin_images.append('./images/'+step_name)
+  #if adv_found:
+  #  adv_images.append('./images/adv_'+step_name)
+  #else:
+  #  adv_images.append('./images/'+step_name)
+  #imgTogif(origin_images, adv_images)
+  #if adv_found:
+  #  return jsonify(image_ret=step_name, adv_image_ret='adv_'+step_name, img_gif_ret='./images/img_out.gif',adv_gif_ret='./images/adv_out.gif',new_h = new_heading)
+  #else:
+  #  return jsonify(image_ret=step_name, adv_image_ret=step_name, img_gif_ret='./images/img_out.gif',adv_gif_ret='./images/adv_out.gif',new_h = new_heading)
 
   origin_images.append('./images/'+step_name)
-  adv_images.append('./images/adv-'+step_name)
+  adv_images.append('./images/adv_'+step_name)
   imgTogif(origin_images, adv_images)
-  return jsonify(image_ret=step_name, adv_image_ret='adv-'+step_name, img_gif_ret='./images/img_out.gif',adv_gif_ret='./images/adv_out.gif',new_h = new_heading)
+  return jsonify(image_ret=step_name, adv_image_ret='adv_'+step_name, img_gif_ret='./images/img_out.gif',adv_gif_ret='./images/adv_out.gif',new_h = new_heading)
 
 @app.route("/images/<path:path>")
 def images(path):

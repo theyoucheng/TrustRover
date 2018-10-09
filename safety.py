@@ -135,70 +135,59 @@ def check_safety_dflow(step, https, pano, fov, heading, pitch, key, tfnet):
     ## let's predict
     results = tfnet.return_predict(imgcv)
 
-    print ('\n')
-    print (results)
-    print ('\n')
-
-
     check_inside(results)
+
     ## draw the bounding box
     new_write_boundingboxes(results, imgcv, './{0}/{1}'.format(step, img))
+    if step>9:
+        os.system("cp ./{0}/step{0}.png ./images/step{0}.png".format(step))
+    else:
+        os.system("cp ./{0}/step{0}.png ./images/step0{0}.png".format(step))
+
     origin_labels = []
     for result in results:
         if not result['label']=='':
           origin_labels.append(result["label"])
-    #if len(results)>0:
-    #  os.system("cp prediction.png ./{0}/{1}".format(step, img))
-    #else:
-    #  os.system("cp ./{0}/{2} ./{0}/{1}".format(step, img, origin_img))
 
-    return 
 
-    if step>9:
-        os.system("cp prediction.png ./images/step{0}.png".format(step))
-    else:
-        os.system("cp prediction.png ./images/step0{0}.png".format(step))
-
-    ## change the heading
+    ## let us change the heading
     delta = 0.1
     sigma = 0.01
     for x in np.arange(sigma, delta, sigma):
-        adv_found = False
-        for b in range(0, 2):
-            if b==0: h=heading+x
-            else: h=heading-x
-            url = '{0}&pano={1}&fov={2}&heading={3}&pitch={4}&key={5}'.format(https, pano, fov, h, pitch, key)
-            advimg = "heading_fov{0}heading{1}pitch{2}.png".format(fov, h, pitch)
-            urlretrieve(url, "./{0}/{1}".format(step, advimg))
-            adv_imgcv = cv2.imread("./{0}/{1}".format(step, advimg))
-            adv_results = tfnet.return_predict(adv_imgcv)
-            check_inside(adv_results)
-            adv_labels = []
-            for result in adv_results:
-                if not result['label']=='':
-                  adv_labels.append(result["label"])
-            if not (Counter(origin_labels)==Counter(adv_labels)):
-                check_label(results, adv_results)
-                write_boundingboxes(results, ori_imgcv)
-                os.system("cp prediction.png ./{0}/{1}".format(step, img))
-                if step>9:
-                    os.system("cp prediction.png ./images/step{0}.png".format(step))
-                else:
-                    os.system("cp prediction.png ./images/step0{0}.png".format(step))
-                write_boundingboxes(adv_results, adv_imgcv)
-                os.system("cp prediction.png ./{0}/adv-{1}".format(step, advimg))
-                if step>9:
-                    os.system("cp prediction.png ./images/adv-step{0}.png".format(step))
-                else:
-                    os.system("cp prediction.png ./images/adv-step0{0}.png".format(step))
-                #os.system("rm ./{0}/{1}".format(step, advimg))
-                adv_found = True
-                break
-            #else:
-            #    os.system("rm ./{0}/{1}".format(step, advimg))
+      adv_found = False
+      for b in range(0, 2):
+        if b==0: h=heading+x
+        else: h=heading-x
+        url = '{0}&pano={1}&fov={2}&heading={3}&pitch={4}&key={5}'.format(https, pano, fov, h, pitch, key)
+        ## the heading adjusted image
+        advimg = 'heading_step{0}'.format(step) #"heading_fov{0}heading{1}pitch{2}.png".format(fov, h, pitch)
+        urlretrieve(url, "./{0}/{1}".format(step, advimg))
+        adv_imgcv = cv2.imread("./{0}/{1}".format(step, advimg))
+
+        adv_results = tfnet.return_predict(adv_imgcv)
+        check_inside(adv_results)
+
+        adv_labels = []
+        for result in adv_results:
+          if not result['label']=='':
+            adv_labels.append(result["label"])
+
+        ## inconsistency
+        if not (Counter(origin_labels)==Counter(adv_labels)):
+          new_write_boundingboxes(adv_results, adv_imgcv, './{0}/adv_'.format(step)+img)
+          if step>9:
+              os.system("cp ./{0}/adv_step{0}.png ./images/adv_step{0}.png".format(step))
+          else:
+              os.system("cp ./{0}/adv_step{0}.png ./images/adv_step0{0}.png".format(step))
+          adv_found = True
+        os.system("rm ./{0}/{1}".format(step, advimg))
         if adv_found: return False
 
-    ## to be continued 
+    ## It's safe!
+    if step>9:
+        os.system("cp ./{0}/step{0}.png ./images/adv_step{0}.png".format(step))
+    else:
+        os.system("cp ./{0}/step{0}.png ./images/adv_step0{0}.png".format(step))
     return True
 
     for x in np.arange(sigma, delta, sigma):
@@ -268,6 +257,7 @@ def check_safety_dflow(step, https, pano, fov, heading, pitch, key, tfnet):
         if adv_found: return False
     return True
 
+## TODO: #fix#
 def imgTogif(origin_images, adv_images):
     img_list=[]
     adv_list=[]
