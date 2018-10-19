@@ -47,6 +47,7 @@ def check_inside(results):
 
 
 def check_label(results, adv_results):
+
     for result in results:
         deviant = True
         for advresult in adv_results:
@@ -67,6 +68,111 @@ def check_label(results, adv_results):
         if deviant:
             advresult['label'] = "deviant: "+advresult['label']
 
+#def close(x,y):
+#  d=25
+#  return (y-d<=x and x<=y+d) or (x-d<=y and y<=x+d)
+
+def close(topleft1, bottomright1, topleft2, bottomright2):
+  print ('in close')
+
+  xt1=topleft1['x']
+  yt1=topleft1['y']
+  xt2=topleft2['x']
+  yt2=topleft2['y']
+
+  xb1=bottomright1['x']
+  yb1=bottomright1['y']
+  xb2=bottomright2['x']
+  yb2=bottomright2['y']
+
+  boxA=[xt1,yt1,xb1,yb1]
+  boxB=[xt2,yt2,xb2,yb2]
+  # determine the (x, y)-coordinates of the intersection rectangle
+  xA = max(boxA[0], boxB[0])
+  yA = max(boxA[1], boxB[1])
+  xB = min(boxA[2], boxB[2])
+  yB = min(boxA[3], boxB[3])
+  
+  # compute the area of intersection rectangle
+  interArea = max(0, xB - xA + 1) * max(0, yB - yA + 1)
+  
+  # compute the area of both the prediction and ground-truth
+  # rectangles
+  boxAArea = (boxA[2] - boxA[0] + 1) * (boxA[3] - boxA[1] + 1)
+  boxBArea = (boxB[2] - boxB[0] + 1) * (boxB[3] - boxB[1] + 1)
+  
+  # compute the intersection over union by taking the intersection
+  # area and dividing it by the sum of prediction + ground-truth
+  # areas - the interesection area
+  iou = interArea / float(boxAArea + boxBArea - interArea)
+  
+  print (boxAArea, boxBArea, boxA, boxB, iou)
+  # return the intersection over union value
+  return iou>0.5
+
+  #h1=-(yt1-yb1)
+  #w1=-(xt1-xb1)
+  #print ('===>',h1,w1)
+  #h2=-(yt2-yb2)
+  #w2=-(xt2-xb2)
+
+  #f=1
+
+  #if xt1-w1*f <= xt2 <= xt1+w1*f and yt1-h1*f <= yt2 <= yt1+h1*f:
+  #  if xb1-w1*f <= xb2 <= xb1+w1*f and yb1-h1*f <= yb2 <= yb1+h1*f:
+  #    if xt2-w2*f <= xt1 <= xt2+w2*f and yt2-h2*f <= yt1 <= yt2+h2*f:
+  #      if xb2-w2*f <= xb1 <= xb2+w2*f and yb2-h2*f <= yb1 <= yb2+h2*f:
+  #        return True
+
+  ##if topleft1['x']-w1*0.1<=topleft2['x'] and topleft2['x']<=topleft1['x']+w1*0.1:
+  ##  if topleft1['x']-h1*0.1<=topleft2['x'] and topleft2['y']<=topleft1['y']+h1*0.1:
+  ##    pass
+  #return False
+  
+
+def diff(results, adv_results):
+
+  new_adv_results=[]
+  diff_results=[]
+
+  print ('###',results, adv_results)
+
+  for result in results:
+    if result['label']=='': continue
+    deviant = True
+    for advresult in adv_results:
+      overlapping=False
+      print ('+++++++++++++++',result['label'],advresult['label'])
+      if close(advresult['topleft'],advresult['bottomright'],result['topleft'],result['bottomright']):
+        overlapping=True
+      if overlapping:
+          deviant = False
+          break
+    ## result is not detected in the adv case
+    if deviant == True:
+      nonrobust_result=result.copy()
+      nonrobust_result['label'] = "nonrobust: "+nonrobust_result['label']
+      diff_results.append(nonrobust_result)
+
+  for advresult in adv_results:
+    if advresult['label']=='': continue
+    deviant = True;
+    for result in results:
+      overlapping=False
+      print ('----------------',result['label'],advresult['label'])
+      if close(advresult['topleft'],advresult['bottomright'],result['topleft'],result['bottomright']):
+        overlapping=True
+      if overlapping:
+        if(advresult['label']==result['label']):
+          deviant = False
+        break
+    result=advresult.copy()
+    ## advresult is not in the original results
+    if deviant:
+      result['label'] = "nonrobust: "+result['label']
+    diff_results.append(result)
+
+  return diff_results
 
 ## Added different colours for common detected objects
 ##(will find a better solution for all possible labels later)
@@ -75,7 +181,7 @@ def decide_box_colour(str):
     ##             {"label":"bus","colour":(242,198,90)},{"label":"truck","colour":(144,75,154)},{"label":"motorbike","colour":(237,155,16)},
     ##             {"label":"traffic light", "colour":(255,255,0)}]
     colour = (0,255,0)
-    if str.startswith("danger"):
+    if str.startswith("danger") or str.startswith("nonrobust"):
         colour = (0,0,255)
     return colour
 
@@ -174,6 +280,8 @@ def check_safety_dflow(step, https, pano, fov, heading, pitch, key, tfnet):
 
         ## inconsistency
         if not (Counter(origin_labels)==Counter(adv_labels)):
+          print ('==============================', step)
+          adv_results=diff(results, adv_results)
           new_write_boundingboxes(adv_results, adv_imgcv, './{0}/adv_'.format(step)+img)
           if step>9:
               os.system("cp ./{0}/adv_step{0}.png ./images/adv_step{0}.png".format(step))
@@ -188,6 +296,8 @@ def check_safety_dflow(step, https, pano, fov, heading, pitch, key, tfnet):
         os.system("cp ./{0}/step{0}.png ./images/adv_step{0}.png".format(step))
     else:
         os.system("cp ./{0}/step{0}.png ./images/adv_step0{0}.png".format(step))
+
+    ## do not continue
     return True
 
     for x in np.arange(sigma, delta, sigma):
@@ -235,6 +345,7 @@ def check_safety_dflow(step, https, pano, fov, heading, pitch, key, tfnet):
             adv_labels = []
             for result in adv_results:
                 adv_labels.append(result["label"])
+            ## inconsistent detection result
             if not (Counter(origin_labels)==Counter(adv_labels)):
                 check_label(results, adv_results)
                 write_boundingboxes(results, ori_imgcv)
