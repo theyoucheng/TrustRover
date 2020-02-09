@@ -27,30 +27,33 @@ function StreetViewImages(options) {
     var m_iSensitivity = 50;
     var m_iSpeed = 100;
 
+    //function called on the google direction service
+    function DirectionSerivceFunction(result, status) {
+        if (status === google.maps.DirectionsStatus.OK) {
+            for (var i = 0, length = result.routes[0].legs.length; i < length; i++) {
+                for (var j = 0, lengthJ = result.routes[0].legs[i].steps.length; j < lengthJ; j++) {
+                    for (var k = 0, lengthK = result.routes[0].legs[i].steps[j].lat_lngs.length; k < lengthK; k++) {
+                        m_aVertices.push(result.routes[0].legs[i].steps[j].lat_lngs[k])
+                    }
+                }
+            }
+            for (var i = 1, length = m_aVertices.length; i < length; i++) {
+                if (distanceTo(m_aVertices[i], m_aVertices[i - 1]) < .009) {
+                    m_aVertices.splice(i--, 1);
+                    length--;
+                }
+            }
+            pullPanoImages();
+        } else {
+            throw new Error("Error calculating route " + status);
+        }
+    }
+
     (new google.maps.DirectionsService).route({
         origin: m_sOrigin,
         destination: m_sDestination,
         travelMode: google.maps.TravelMode.DRIVING
-        }, function(result, status) {
-            if (status === google.maps.DirectionsStatus.OK) {
-                for (var i = 0, length = result.routes[0].legs.length; i < length; i++) {
-                    for (var j = 0, lengthJ = result.routes[0].legs[i].steps.length; j < lengthJ; j++) {
-                        for (var k = 0, lengthK = result.routes[0].legs[i].steps[j].lat_lngs.length; k < lengthK; k++) {
-                            m_aVertices.push(result.routes[0].legs[i].steps[j].lat_lngs[k])
-                        }
-                    }
-                }
-                for (var i = 1, length = m_aVertices.length; i < length; i++) {
-                    if (distanceTo(m_aVertices[i], m_aVertices[i - 1]) < .009) {
-                        m_aVertices.splice(i--, 1);
-                        length--;
-                    }
-                }
-                pullPanoImages();
-            } else {
-                throw new Error("Error calculating route " + status);
-            }
-        });
+        }, DirectionSerivceFunction);
 
     function toRadians(deg) {
         return deg * (Math.PI / 180)
@@ -94,6 +97,7 @@ function StreetViewImages(options) {
                             "pitch=0",
                             "key=" + m_sApiKey
                         ].join("&")
+
                     });
                     setTimeout(function() {
                         pullPanoImages();

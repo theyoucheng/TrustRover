@@ -3,7 +3,7 @@
     <HEAD>
         <TITLE>TR Project</TITLE>
         <style>
-        html, body, #imgdiv ,#ggmap{
+        html, body, #imgdiv, #ggmap{
           margin: 0;
           padding: 0;
           height: 100%;
@@ -14,7 +14,7 @@
           overflow: hidden;
         }
         </style>
-        <SCRIPT src="http://maps.google.com/maps/api/js?sensor=false" type="text/javascript"></SCRIPT>
+        <script type="text/javascript" src="//maps.googleapis.com/maps/api/js?key=AIzaSyBX_EJ7eVl--YFwkFzIB1wegoz4e-9q_78"></script>
         <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
         <script type="text/javascript" src="{{ url_for('static', filename='StreetViewImages.js') }}"></script>
 
@@ -55,7 +55,7 @@
               setTimeout("show_adv_view()", 1000);
               return;
             }
-            adv_view.src=adv_gif[0];
+           adv_view.src=adv_gif[0];
           }
 
           function main() {
@@ -79,7 +79,7 @@
             imgdiv.appendChild(adv_view);
             imgdiv.appendChild(br.cloneNode());
             imgdiv.appendChild(br.cloneNode());
-            show_adv_view();
+            show_adv_view(); 
 
             var div = document.createElement('div');
             center.appendChild(div);
@@ -88,11 +88,14 @@
             new StreetViewImages({
               origin: document.getElementById("origin").value,
               destination: document.getElementById("destination").value,
-              apiKey: "AIzaSyDzdWMOcjRgS-PkwxNbLIRBxrqfG_vMQGs",
+              apiKey: "AIzaSyBX_EJ7eVl--YFwkFzIB1wegoz4e-9q_78",
+              
+              //old api key
+              //AIzaSyDzdWMOcjRgS-PkwxNbLIRBxrqfG_vMQGs
 
               onPanoLoaded: function (pano) {
                   console.log(pano);
-                  locations.push({lat:pano.panoData.f[pano.l_pano].lat, lng:pano.panoData.f[pano.l_pano].lng});
+                  locations.push({lat:pano.panoData.h[pano.l_pano].lat, lng:pano.panoData.h[pano.l_pano].lng});
                   ori_headings.push(pano.heading);
                   console.log(ori_headings);
                   console.log(new_headings);
@@ -110,7 +113,7 @@
                     origin_images.push("./images/"+data.image_ret);
                     adv_images.push("./images/"+data.adv_image_ret);
                     gif.push(data.img_gif_ret);
-                    adv_gif.push(data.adv_gif_ret);
+                    adv_gif.push(data.adv_gif_ret); 
                     new_headings.push(data.new_h);
                     return false;
                   })
@@ -151,21 +154,6 @@
           }
 
         </SCRIPT>
-
-        <script type=text/javascript>
-          $SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
-          $(function() {
-            $('a#calculate').bind('click', function() {
-              $.getJSON($SCRIPT_ROOT + '/_add_numbers', {
-                a: 1, //$('input[name="a"]').val(),
-                b: 2, //$('input[name="b"]').val()
-              }, function(data) {
-                $("#result").text(data.result);
-              });
-              return false;
-            });
-          });
-        </script>
     </HEAD>
     <BODY>
        <!--
@@ -187,9 +175,6 @@
          <label for="Google API Key">API Key</label>
          <input type="text" placeholder="api key" id="apiKey" />
          <input type="button" onclick="main()" value="Go" /><br>
-         <script>
-
-         </script>
        </center>
 
        <!--
