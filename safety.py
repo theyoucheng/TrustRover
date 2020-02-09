@@ -129,7 +129,6 @@ def check_safety_dflow(step, https, pano, fov, heading, pitch, key, tfnet):
     ## to retrieve the image
     urlretrieve(url, "./{0}/{1}".format(step, origin_img))
 
-
     ## the image is read
     imgcv = cv2.imread("./{0}/{1}".format(step, origin_img))
     ## let's predict
@@ -150,7 +149,7 @@ def check_safety_dflow(step, https, pano, fov, heading, pitch, key, tfnet):
           origin_labels.append(result["label"])
 
 
-    ## let us change the heading
+    # let us change the heading
     delta = 0.1
     sigma = 0.01
     for x in np.arange(sigma, delta, sigma):
@@ -172,7 +171,7 @@ def check_safety_dflow(step, https, pano, fov, heading, pitch, key, tfnet):
           if not result['label']=='':
             adv_labels.append(result["label"])
 
-        ## inconsistency
+        # inconsistency
         if not (Counter(origin_labels)==Counter(adv_labels)):
           new_write_boundingboxes(adv_results, adv_imgcv, './{0}/adv_'.format(step)+img)
           if step>9:
@@ -183,7 +182,7 @@ def check_safety_dflow(step, https, pano, fov, heading, pitch, key, tfnet):
         os.system("rm ./{0}/{1}".format(step, advimg))
         if adv_found: return False
 
-    ## It's safe!
+    # It's safe!
     if step>9:
         os.system("cp ./{0}/step{0}.png ./images/adv_step{0}.png".format(step))
     else:
@@ -288,7 +287,9 @@ def darkflow_check(step, https, pano, fov, heading, pitch, key, tfnet):
     results = tfnet.return_predict(ori_imgcv)
     ## check these objects inside the region of interest
     acc = check_inside(results)
-    acctext = "The accelaration must < "+f'{acc:.2f}'+"m/t^2"
+    # acctext = "The accelaration must < "+f'{acc:.2f}'+"m/t^2"
+    acctext = "The accelaration must < "
+
     ## draw the bounding box
     write_boundingboxes(results, ori_imgcv)
     #### why???

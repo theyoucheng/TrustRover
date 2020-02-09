@@ -34,7 +34,9 @@ new_heading = 0
 ori_path = Path('Original')
 adv_path = Path('Adv')
 
-options = {"model": "cfg/yolo.cfg", "load": "bin/yolo.weights", "threshold": 0.4}
+# options = {"model": "cfg/yolo.cfg", "load": "bin/yolo.weights", "threshold": 0.4}
+
+options = {"model": "../cfg/yolov2.cfg", "load": "../cfg/yolov2.weights", "threshold": 0.4}
 tfnet = TFNet(options)
 
 app=Flask(__name__)
@@ -125,7 +127,9 @@ def check_image():
   origin_images.append('./images/'+step_name)
   adv_images.append('./images/adv_'+step_name)
   imgTogif(origin_images, adv_images)
+
   return jsonify(image_ret=step_name, adv_image_ret='adv_'+step_name, img_gif_ret='./images/img_out.gif',adv_gif_ret='./images/adv_out.gif',new_h = new_heading)
+
 
 @app.route("/images/<path:path>")
 def images(path):

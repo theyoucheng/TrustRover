@@ -14,3 +14,61 @@ The object detection and detection is implemented in safety.py. It uses darknet
 https://github.com/thtrieu/darkflow.
 
 
+Step 1
+download conda python package and environment manager
+https://docs.conda.io/projects/conda/en/latest/user-guide/install/download.html
+
+
+Step 2
+use conda to create an environment
+https://docs.conda.io/projects/conda/en/4.6.0/_downloads/52a95608c49671267e40c689e0bc00ca/conda-cheatsheet.pdf
+
+Step 3
+install the following packages into your newly created conda environment:
+Python3, tensorflow 1.0(https://anaconda.org/conda-forge/tensorflow), numpy, opencv 3, flask.
+this can be done using the conda package manager
+
+Step 4
+download darkflow and install within the TrustRover Directory
+https://github.com/thtrieu/darkflow
+
+step 5
+download the yolo.weights and add it into the cfg folder
+http://pjreddie.com/media/files/yolo.weights
+
+step 6
+ensure that you have a google cloud platform api key created for use with the street view apis. this is done through the google cloud platform portal.
+
+step 7
+ensure that the following apis are enabled in your google cloud platform
+Directions API
+Distance Matrix API
+Maps JavaScript API
+Street View Static API
+
+step 8
+activate the conda env that you been created for this project
+
+step 9
+while in the specified env, navigate to the trustrover directory
+
+step 10
+run the command "python app.py"
+
+step 11
+in your browser type in the url "localhost:5000"
+
+step 12
+trustrover is now available to use. To use trust rover, simply add in the starting point of the route and the destination and the api key is different to the one hard coded in the file.
+
+The program will then created gifs that show the routes via streetview with an overlaying boundary box, any object that is detected in that box is identified. 
+
+there is also a map at the bottom of the webpage that shows the route tyou have selected on google maps.
+ 
+
+
+
+
+
+
+
