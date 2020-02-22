@@ -36,7 +36,7 @@ adv_path = Path('Adv')
 
 # options = {"model": "cfg/yolo.cfg", "load": "bin/yolo.weights", "threshold": 0.4}
 
-options = {"model": "../cfg/yolov2.cfg", "load": "../cfg/yolov2.weights", "threshold": 0.4}
+options = {"model": "./cfg/yolo.cfg", "load": "./cfg/yolo.weights", "threshold": 0.4}
 tfnet = TFNet(options)
 
 app=Flask(__name__)
