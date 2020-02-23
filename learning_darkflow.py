@@ -6,16 +6,20 @@ import math
 from collections import Counter
 import cv2
 import numpy as np
+import imageio
 
 from darkflow.net.build import TFNet
 
 options = {"model": "./cfg/yolo.cfg", "load": "./cfg/bin/yolo.weights", "threshold": 0.3}
 tfnet = TFNet(options)
 
+route = os.listdir("./routes/ormeau_road/")
+route = sorted(route)
 
-imgcv = cv2.imread("./routes/ormeau_road/(step3)54.5876023,-5.9239714.jpeg")
-## let's predict
-results = tfnet.return_predict(imgcv)
+
+# imgcv = cv2.imread("./routes/ormeau_road/(step3)54.5876023,-5.9239714.jpeg")
+# ## let's predict
+# results = tfnet.return_predict(imgcv)
 
 def decide_box_colour(str):
     colour_list=[{"label":"person","colour":(255,0,0)},{"label":"bicycle","colour":(0,255,0)},{"label":"car","colour":(0,0,255)},
@@ -46,12 +50,24 @@ def new_write_boundingboxes(results, imgcv, new_img):
         cv2.putText(imgcv, result["label"], (text_x, text_y),cv2.FONT_HERSHEY_SIMPLEX, 0.5, decide_box_colour(result["label"]), 2, cv2.LINE_AA)
     cv2.imwrite(new_img, imgcv)
 
-new_write_boundingboxes(results, imgcv, './predictions/result[6].png')
+def convertToGif(images):
+    img_list=[]
+    if (len(images) > 0):
+        for image in images:
+            img_list.append(imageio.imread('./predicted_routes/ormeau_road/{0}'.format(image)))
+        imageio.mimsave('./predicted_routes/ormeau_road/journey.gif',img_list, duration=0.5)
+
+# new_write_boundingboxes(results, imgcv, './predictions/result[6].png')
 
 
 
+for step in route:
+    imgcv = cv2.imread('./routes/ormeau_road/{0}'.format(step))
+    results = tfnet.return_predict(imgcv)
+    new_write_boundingboxes(results, imgcv, './predicted_routes/ormeau_road/{0}'.format(step))
 
+#get predicted image and convert to gif
+predicted_route = os.listdir("./predicted_routes/ormeau_road/")
+predicted_route = sorted(route)
+convertToGif(predicted_route)
 
-
-
-print(results)
