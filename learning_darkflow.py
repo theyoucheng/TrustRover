@@ -10,25 +10,24 @@ import imageio
 
 from darkflow.net.build import TFNet
 
+#creating the darkflow object detector
 options = {"model": "./cfg/yolo.cfg", "load": "./cfg/bin/yolo.weights", "threshold": 0.3}
 tfnet = TFNet(options)
 
-route = os.listdir("./routes/ormeau_road/")
-route = sorted(route)
-
-
+routes = os.listdir("./routes/")
+predicted_path = 'predicted_routes'
 # imgcv = cv2.imread("./routes/ormeau_road/(step3)54.5876023,-5.9239714.jpeg")
 # ## let's predict
 # results = tfnet.return_predict(imgcv)
 
 def decide_box_colour(str):
+    colour = ''
     colour_list=[{"label":"person","colour":(255,0,0)},{"label":"bicycle","colour":(0,255,0)},{"label":"car","colour":(0,0,255)},
                 {"label":"bus","colour":(242,198,90)},{"label":"truck","colour":(144,75,154)},{"label":"motorbike","colour":(237,155,16)},
                 {"label":"traffic light", "colour":(255,255,0)}]
     for obj in colour_list:
         if str==obj["label"]: colour = obj["colour"]
-
-
+    if colour =='': colour = (0,0,255)
     #colour = (0,255,0)
     if str.startswith("danger"):
         colour = (0,0,255)
@@ -50,24 +49,32 @@ def new_write_boundingboxes(results, imgcv, new_img):
         cv2.putText(imgcv, result["label"], (text_x, text_y),cv2.FONT_HERSHEY_SIMPLEX, 0.5, decide_box_colour(result["label"]), 2, cv2.LINE_AA)
     cv2.imwrite(new_img, imgcv)
 
-def convertToGif(images):
+def convertToGif(images, path, route):
     img_list=[]
     if (len(images) > 0):
         for image in images:
-            img_list.append(imageio.imread('./predicted_routes/ormeau_road/{0}'.format(image)))
-        imageio.mimsave('./predicted_routes/ormeau_road/journey.gif',img_list, duration=0.5)
+            img_list.append(imageio.imread('./{0}/{1}/{2}'.format(path, route, image)))
+        imageio.mimsave('./{0}/{1}/journey.gif'.format(path, route),img_list, duration=0.5)
 
 # new_write_boundingboxes(results, imgcv, './predictions/result[6].png')
+for route in routes:
+    steps = os.listdir('./routes/{0}/'.format(route))
+    steps = sorted(steps)
+    for step in steps:
+        imgcv = cv2.imread('./routes/{0}/{1}'.format(route, step))
+        results = tfnet.return_predict(imgcv)
+        if os.path.exists('./{0}/{1}/'.format(predicted_path, route)):
+            new_write_boundingboxes(results, imgcv, './{0}/{1}/{2}'.format(predicted_path, route, step))
+        else:
+            try:
+                os.mkdir('./{0}/{1}/'.format(predicted_path, route))
+                new_write_boundingboxes(results, imgcv, './{0}/{1}/{2}'.format(predicted_path,route, step))
+            except OSError:
+                print ("Creation of the directory ./{0}/{1} failed".format(predicted_path, route))
+            else:
+                print ("Successfully created the directory ./{0}/{1}".format(predicted_path, route))
+    predicted_route = os.listdir("./{0}/{1}/".format(predicted_path, route))
+    predicted_route = sorted(predicted_route)
+    convertToGif(predicted_route, predicted_path, route)
 
-
-
-for step in route:
-    imgcv = cv2.imread('./routes/ormeau_road/{0}'.format(step))
-    results = tfnet.return_predict(imgcv)
-    new_write_boundingboxes(results, imgcv, './predicted_routes/ormeau_road/{0}'.format(step))
-
-#get predicted image and convert to gif
-predicted_route = os.listdir("./predicted_routes/ormeau_road/")
-predicted_route = sorted(route)
-convertToGif(predicted_route)
 
