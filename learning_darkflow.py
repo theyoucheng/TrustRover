@@ -33,7 +33,7 @@ def decide_box_colour(str):
         colour = (0,0,255)
     return colour
 
-def new_write_boundingboxes(results, imgcv, new_img):
+def write_boundingboxes(results, imgcv, new_img):
     cv2.imwrite(new_img, imgcv)
     imgcv = cv2.imread(new_img)
     ## ROI: region of interest
@@ -47,34 +47,36 @@ def new_write_boundingboxes(results, imgcv, new_img):
                      decide_box_colour(result["label"]), 2)
         text_x, text_y = int(result["topleft"]["x"]) - 10, int(result["topleft"]["y"]) - 10
         cv2.putText(imgcv, result["label"], (text_x, text_y),cv2.FONT_HERSHEY_SIMPLEX, 0.5, decide_box_colour(result["label"]), 2, cv2.LINE_AA)
-    cv2.imwrite(new_img, imgcv)
+        cv2.imwrite(new_img, imgcv)
 
 def convertToGif(images, path, route):
     img_list=[]
     if (len(images) > 0):
         for image in images:
             img_list.append(imageio.imread('./{0}/{1}/{2}'.format(path, route, image)))
-        imageio.mimsave('./{0}/{1}/journey.gif'.format(path, route),img_list, duration=0.5)
+        imageio.mimsave('./{0}/{1}/journey.gif'.format(path, route),img_list, duration=0.1)
 
 # new_write_boundingboxes(results, imgcv, './predictions/result[6].png')
 for route in routes:
-    steps = os.listdir('./routes/{0}/'.format(route))
-    steps = sorted(steps)
-    for step in steps:
-        imgcv = cv2.imread('./routes/{0}/{1}'.format(route, step))
-        results = tfnet.return_predict(imgcv)
-        if os.path.exists('./{0}/{1}/'.format(predicted_path, route)):
-            new_write_boundingboxes(results, imgcv, './{0}/{1}/{2}'.format(predicted_path, route, step))
-        else:
-            try:
-                os.mkdir('./{0}/{1}/'.format(predicted_path, route))
-                new_write_boundingboxes(results, imgcv, './{0}/{1}/{2}'.format(predicted_path,route, step))
-            except OSError:
-                print ("Creation of the directory ./{0}/{1} failed".format(predicted_path, route))
+    if route != "pedestrian" : continue
+    else :
+        steps = os.listdir('./routes/{0}/'.format(route))
+        steps = sorted(steps)
+        for step in steps:
+            imgcv = cv2.imread('./routes/{0}/{1}'.format(route, step))
+            results = tfnet.return_predict(imgcv)
+            if os.path.exists('./{0}/{1}/'.format(predicted_path, route)):
+                write_boundingboxes(results, imgcv, './{0}/{1}/{2}'.format(predicted_path, route, step))
             else:
-                print ("Successfully created the directory ./{0}/{1}".format(predicted_path, route))
-    predicted_route = os.listdir("./{0}/{1}/".format(predicted_path, route))
-    predicted_route = sorted(predicted_route)
-    convertToGif(predicted_route, predicted_path, route)
+                try:
+                    os.mkdir('./{0}/{1}/'.format(predicted_path, route))
+                    write_boundingboxes(results, imgcv, './{0}/{1}/{2}'.format(predicted_path,route, step))
+                except OSError:
+                    print ("Creation of the directory ./{0}/{1} failed".format(predicted_path, route))
+                else:
+                    print ("Successfully created the directory ./{0}/{1}".format(predicted_path, route))
+        predicted_route = os.listdir("./{0}/{1}/".format(predicted_path, route))
+        predicted_route = sorted(predicted_route)
+        convertToGif(predicted_route, predicted_path, route)
 
 
