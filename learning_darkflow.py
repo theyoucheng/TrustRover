@@ -18,7 +18,10 @@ from darkflow.net.build import TFNet
 options = {"model": "./cfg/yolov2.cfg", "load": "./cfg/bin/yolov2.weights", "threshold": 0.1, "gpu": 1.0}
 tfnet = TFNet(options)
 
-objs_in_range = np.empty((3,2))
+prev_objs_in_slow_range = []
+prev_objs_in_stop_range = []
+objs_in_slow_range = []
+objs_in_stop_range = []
 car_status = ""
 folder = "test_route"
 routes = os.listdir("./{0}/".format(folder))
@@ -53,44 +56,59 @@ slow_zone = np.array([[driving_path[0][0],driving_path[0][1]+50],
 def decide_box_colour(label):
     colour = (0,0,255)
     if label.startswith("danger"):
+        colour = (51,165,255)
+    if label.startswith("stop"):
         colour = (0,0,255)
     if label.startswith("warning"):
+        colour = (51,240,255)
+    if label.startswith("slow"):
         colour = (51,165,255)
     return colour
 
-def check_status_of_car(num_of_pos_collision, num_of_obj_ahead):
-    if num_of_pos_collision > 0:
+def check_status_of_car():
+    status =''
+    status = check_stop_zone()
+    if status != "driving":
+        return status
+    status = check_slow_zone()
+    return status
+
+
+def check_stop_zone():
+    if len(objs_in_stop_range) > 0:
         return "stopped"
-    elif num_of_obj_ahead > 0:
-        return "slow"
-    else :
+    elif len(prev_objs_in_stop_range) > 0 and len(objs_in_stop_range) == 0:
+        return "accelerating"
+    else:
         return "driving"
 
-def write_boundingboxes(results, imgcv, new_img):
-    # cv2.imwrite(new_img, imgcv)
-    # imgcv = cv2.imread(new_img)
-    ## ROI: region of interest
-    num_of_pos_collision = 0
-    num_of_obj_ahead = 0
-    results = check_if_object_in_path(results)
+def check_slow_zone():
+    if len(prev_objs_in_slow_range) == 0 and len(objs_in_slow_range) > 0 :
+        return "decelerating"
+    elif len(objs_in_slow_range) > 0:
+        objs_in_slow_range.sort()
+        if len(prev_objs_in_slow_range) > 0:
+            prev_objs_in_slow_range.sort()
+            if objs_in_slow_range[-1] > prev_objs_in_slow_range[-1]:
+                return "decelerating"
+            elif objs_in_slow_range[-1] < prev_objs_in_slow_range[-1]:
+                return "accelerating"
+            else:
+                return "slow"
+        else:
+            return "slow"
+    else:
+        return "driving"
+
+
+def write_boundingboxes(results, imgcv, new_img, car_status):
     for result in results:
         if result['status']=='': continue 
         cv2.rectangle(imgcv,
                      (result["topleft"]["x"], result["topleft"]["y"]),
                      (result["bottomright"]["x"],result["bottomright"]["y"]),
                      decide_box_colour(result["status"]), 2)
-        text_x, text_y = int(result["topleft"]["x"]) - 10, int(result["topleft"]["y"]) - 10
-        cv2.putText(imgcv, result["label"], (text_x, text_y),cv2.FONT_HERSHEY_SIMPLEX, 0.5, decide_box_colour(result['status']), 2, cv2.LINE_AA)
-        if result['status'] == 'stop': 
-            num_of_pos_collision += 1
-        if result['status'] == 'slow': 
-            num_of_obj_ahead += 1
-            add_obj_to_warning_list(result["topleft"]["y"])
-
-    car_status = check_status_of_car(num_of_pos_collision,num_of_obj_ahead)
-    cv2.putText(imgcv, "car status: {0}".format(car_status), (20, 20),cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,0,0), 2, cv2.LINE_AA)
-    cv2.putText(imgcv, "objs in warning: {0}".format(objs_in_range.size), (250, 20),cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,0,0), 2, cv2.LINE_AA)
-
+    cv2.putText(imgcv, "car status: {0}".format(car_status), (20, 20),cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0,0,0))
     cv2.imwrite(new_img, imgcv)
 
 def convertToGif(images, path, route):
@@ -101,39 +119,56 @@ def convertToGif(images, path, route):
         imageio.mimsave('./{0}/{1}/journey.gif'.format(path, route),img_list, duration=0.2)
 
 def objectInSector(result, poly, message):
-    point1 = Point(result['topleft']['x'], result['topleft']['y'])
-    point2 = Point(result['bottomright']['x'], result['bottomright']['y'])
-    point3 = Point(result['topleft']['x'], result['bottomright']['y'])
-    point4 = Point(result['bottomright']['x'], result['topleft']['y'])
-    if poly.contains(point1):
-        result['status'] = message
-    elif poly.contains(point2):
-        result['status'] = message
-    elif poly.contains(point3):
-        result['status'] = message
-    elif poly.contains(point4):
-        result['status'] = message
-    return result
+    corners = np.array([[result['topleft']['x'], result['topleft']['y']],
+                       [result['bottomright']['x'], result['bottomright']['y']],
+                       [result['topleft']['x'], result['bottomright']['y']],
+                       [result['bottomright']['x'], result['topleft']['y']]], np.int32)  
+    for corner in corners:
+        corner = Point(corner)
+        if poly.contains(corner):
+            return True
+    
+    return False
 
+def clearObjLists():
+    objs_in_slow_range.clear()
+    objs_in_stop_range.clear()
 
+def set_prev_obj():
+    global prev_objs_in_slow_range
+    global prev_objs_in_stop_range
+    prev_objs_in_slow_range.clear()
+    prev_objs_in_stop_range.clear()
+    prev_objs_in_slow_range = objs_in_slow_range.copy()
+    prev_objs_in_stop_range = objs_in_stop_range.copy()    
 
 def check_if_object_in_path(results):
+    clearObjLists()
     for result in results:
         result['status'] = ''
-        result = objectInSector(result, Polygon(warning_left_sector), "warning" )
-        result = objectInSector(result, Polygon(warning_right_sector), "warning" )
-        result = objectInSector(result, Polygon(danger_left_sector), "danger" )
-        result = objectInSector(result, Polygon(danger_right_sector), "danger" )
-        result = objectInSector(result, Polygon(stopping_zone), "stop" )
-        result = objectInSector(result, Polygon(slow_zone), "slow" )   
+        if objectInSector(result, Polygon(warning_left_sector), "warning" ) or objectInSector(result, Polygon(warning_right_sector), "warning" ):
+            result['status'] = "warning"
+        if objectInSector(result, Polygon(danger_left_sector), "danger" ) or objectInSector(result, Polygon(danger_right_sector), "danger" ):
+            result['status'] = "danger"
+        if objectInSector(result, Polygon(slow_zone), "slow" ):
+            result['status'] = "slow"
+            add_obj_to_warning_list(result['bottomright']['y'])
+        if objectInSector(result, Polygon(stopping_zone), "stop" ):
+            result['status'] = "stop"
+            add_obj_to_danger_list(result['bottomright']['y'])
+
     return results
     
 def add_obj_to_warning_list(y):
-    np.append(objs_in_range,y)
+    objs_in_slow_range.append(y)
+
+
+def add_obj_to_danger_list(y):
+    objs_in_stop_range.append(y)
+
 
 
 def get_prediction(routes):
-
     for route in routes:
         steps = os.listdir('./{0}/{1}/'.format(folder,route))
         steps = sorted(steps)
@@ -142,12 +177,15 @@ def get_prediction(routes):
             print("starting prediction")
             results = tfnet.return_predict(imgcv)
             print("results collected")
+            results = check_if_object_in_path(results)
+            car_status = check_status_of_car()
+            set_prev_obj()
             if os.path.exists('./{0}/{1}/'.format(predicted_path, route)):
-                write_boundingboxes(results, imgcv, './{0}/{1}/{2}'.format(predicted_path, route, step))
+                write_boundingboxes(results, imgcv, './{0}/{1}/{2}'.format(predicted_path, route, step), car_status)
             else:
                 try:
                     os.mkdir('./{0}/{1}/'.format(predicted_path, route))
-                    write_boundingboxes(results, imgcv, './{0}/{1}/{2}'.format(predicted_path,route, step))
+                    write_boundingboxes(results, imgcv, './{0}/{1}/{2}'.format(predicted_path,route, step), car_status)
                 except OSError:
                     print ("Creation of the directory ./{0}/{1} failed".format(predicted_path, route))
                 else:
