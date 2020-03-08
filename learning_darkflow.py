@@ -26,32 +26,57 @@ car_status = ""
 folder = "test_route"
 routes = os.listdir("./{0}/".format(folder))
 predicted_path = 'predicted_routes'
-driving_path = np.array([[190,200],[100,400],[300,400],[210,200]], np.int32)
+# driving_path = np.array([[190,200],[100,400],[300,400],[210,200]], np.int32)
+# warning_left_sector = np.array([[driving_path[1][0],driving_path[0][1]],
+#                               [driving_path[1][0],driving_path[0][1]+50],
+#                               [driving_path[1][0]+60,driving_path[0][1]+50],
+#                               [driving_path[0][0],driving_path[0][1]]], np.int32)
+# danger_left_sector = np.array([[warning_left_sector[1][0],warning_left_sector[1][1]],
+#                               [0,300],
+#                               [0,400],
+#                               [driving_path[1][0],driving_path[1][1]],
+#                               [warning_left_sector[2][0],warning_left_sector[2][1]]], np.int32)
+# warning_right_sector = np.array([[driving_path[3][0],driving_path[3][1]],
+#                               [driving_path[3][0]+30,driving_path[3][1]+50],
+#                               [driving_path[2][0],driving_path[0][1]+50],
+#                               [driving_path[2][0],driving_path[3][1]]], np.int32)
+# danger_right_sector = np.array([[warning_right_sector[1][0],warning_right_sector[1][1]],
+#                               [driving_path[2][0],driving_path[2][1]],
+#                               [driving_path[2][0]+40,driving_path[2][1]],
+#                               [warning_right_sector[1][0]+40,warning_right_sector[1][1]]], np.int32)
+# stopping_zone = np.array([[driving_path[0][0]-30,driving_path[0][1]+100],
+#                               [driving_path[1][0]+20,driving_path[1][1]],
+#                               [driving_path[2][0]-20,driving_path[2][1]],
+#                               [driving_path[3][0]+30,driving_path[3][1]+100]], np.int32)
+# slow_zone = np.array([[driving_path[0][0],driving_path[0][1]+50],
+#                               [stopping_zone[0][0],stopping_zone[0][1]],
+#                               [stopping_zone[3][0],stopping_zone[3][1]],
+#                               [driving_path[3][0],driving_path[3][1]+50]], np.int32)
+driving_path = np.array([[1100,590],[750,850],[1600,850],[1250,590]], np.int32)
 warning_left_sector = np.array([[driving_path[1][0],driving_path[0][1]],
-                              [driving_path[1][0],driving_path[0][1]+50],
-                              [driving_path[1][0]+60,driving_path[0][1]+50],
+                              [driving_path[1][0],driving_path[0][1]+60],
+                              [driving_path[1][0]+270,driving_path[0][1]+60],
                               [driving_path[0][0],driving_path[0][1]]], np.int32)
 danger_left_sector = np.array([[warning_left_sector[1][0],warning_left_sector[1][1]],
-                              [0,300],
-                              [0,400],
+                              [400,850],
                               [driving_path[1][0],driving_path[1][1]],
                               [warning_left_sector[2][0],warning_left_sector[2][1]]], np.int32)
 warning_right_sector = np.array([[driving_path[3][0],driving_path[3][1]],
-                              [driving_path[3][0]+30,driving_path[3][1]+50],
+                              [driving_path[3][0]+75,driving_path[3][1]+50],
                               [driving_path[2][0],driving_path[0][1]+50],
                               [driving_path[2][0],driving_path[3][1]]], np.int32)
 danger_right_sector = np.array([[warning_right_sector[1][0],warning_right_sector[1][1]],
                               [driving_path[2][0],driving_path[2][1]],
-                              [driving_path[2][0]+40,driving_path[2][1]],
-                              [warning_right_sector[1][0]+40,warning_right_sector[1][1]]], np.int32)
-stopping_zone = np.array([[driving_path[0][0]-30,driving_path[0][1]+100],
+                              [driving_path[2][0]+350,driving_path[2][1]],
+                              [warning_right_sector[2][0],warning_right_sector[2][1]]], np.int32)
+stopping_zone = np.array([[driving_path[0][0]-80,driving_path[0][1]+125],
                               [driving_path[1][0]+20,driving_path[1][1]],
                               [driving_path[2][0]-20,driving_path[2][1]],
-                              [driving_path[3][0]+30,driving_path[3][1]+100]], np.int32)
-slow_zone = np.array([[driving_path[0][0],driving_path[0][1]+50],
+                              [driving_path[3][0]+80,driving_path[3][1]+125]], np.int32)
+slow_zone = np.array([[driving_path[0][0],driving_path[0][1]],
                               [stopping_zone[0][0],stopping_zone[0][1]],
                               [stopping_zone[3][0],stopping_zone[3][1]],
-                              [driving_path[3][0],driving_path[3][1]+50]], np.int32)
+                              [driving_path[3][0],driving_path[3][1]]], np.int32)
 
 def decide_box_colour(label):
     colour = (0,0,255)
@@ -108,7 +133,7 @@ def write_boundingboxes(results, imgcv, new_img, car_status):
                      (result["topleft"]["x"], result["topleft"]["y"]),
                      (result["bottomright"]["x"],result["bottomright"]["y"]),
                      decide_box_colour(result["status"]), 2)
-    cv2.putText(imgcv, "car status: {0}".format(car_status), (20, 20),cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0,0,0))
+    cv2.putText(imgcv, "car status: {0}".format(car_status), (1200, 20),cv2.FONT_HERSHEY_SIMPLEX, 2, (0,0,0))
     cv2.imwrite(new_img, imgcv)
 
 def convertToGif(images, path, route):
