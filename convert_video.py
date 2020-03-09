@@ -14,7 +14,7 @@ while(cap.isOpened()):
 
     
     i+=1
-    if i == 500:
+    if i == 600:
         break
  
 cap.release()
