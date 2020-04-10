@@ -47,3 +47,6 @@ ckpt/*
 
 #darkflow_all
 darkflow_all/
+
+# video dashcam journey
+predicted_routes/video_frames/journey.gif

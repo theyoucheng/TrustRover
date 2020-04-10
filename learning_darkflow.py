@@ -15,7 +15,7 @@ import json
 from darkflow.net.build import TFNet
 
 # creating the darkflow object detector
-options = {"model": "./cfg/yolov2.cfg", "load": "./cfg/bin/yolov2.weights", "threshold": 0.1, "gpu": 1.0}
+options = {"model": "./cfg/tiny-yolo-voc.cfg", "load": "./cfg/bin/tiny-yolo-voc.weights", "threshold": 0.1, "gpu": 1.0}
 tfnet = TFNet(options)
 
 prev_objs_in_slow_range = []
@@ -114,9 +114,9 @@ def check_slow_zone():
         objs_in_slow_range.sort()
         if len(prev_objs_in_slow_range) > 0:
             prev_objs_in_slow_range.sort()
-            if objs_in_slow_range[-1] > prev_objs_in_slow_range[-1]:
+            if objs_in_slow_range[-1] > prev_objs_in_slow_range[-1] + 10:
                 return "decelerating"
-            elif objs_in_slow_range[-1] < prev_objs_in_slow_range[-1]:
+            elif objs_in_slow_range[-1] < prev_objs_in_slow_range[-1] + 10:
                 return "accelerating"
             else:
                 return "slow"
@@ -133,7 +133,7 @@ def write_boundingboxes(results, imgcv, new_img, car_status):
                      (result["topleft"]["x"], result["topleft"]["y"]),
                      (result["bottomright"]["x"],result["bottomright"]["y"]),
                      decide_box_colour(result["status"]), 2)
-    cv2.putText(imgcv, "car status: {0}".format(car_status), (1200, 20),cv2.FONT_HERSHEY_SIMPLEX, 2, (0,0,0))
+    cv2.putText(imgcv, "car status: {0}".format(car_status), (1200, 20),cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0,0,0))
     cv2.imwrite(new_img, imgcv)
 
 def convertToGif(images, path, route):

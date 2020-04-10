@@ -7,14 +7,17 @@ while(cap.isOpened()):
     ret, frame = cap.read()
     if ret == False:
         break
-    if i < 10:
-        cv2.imwrite('./test_route/video_frames/0{0}{1}'.format(i,'.jpg'),frame)
-    else:
-        cv2.imwrite('./test_route/video_frames/{0}{1}'.format(i,'.jpg'),frame)
+
+    
+    if i % 10 == 0:
+        if i < 100:
+            cv2.imwrite('./test_route/video_frames/0{0}{1}'.format(i,'.jpg'),frame)
+        else:
+            cv2.imwrite('./test_route/video_frames/{0}{1}'.format(i,'.jpg'),frame)
 
     
     i+=1
-    if i == 600:
+    if i == 700:
         break
  
 cap.release()

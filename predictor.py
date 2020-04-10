@@ -1,7 +1,11 @@
 class predictor:
+   
+   def __init__(self):
+       self.prev_objs_in_slow_range = []
+       self.prev_objs_in_stop_range = []
     
    
-   def get_prediction(image, predicted_path):
+   def get_prediction(tfnet, image, predicted_path):
             results = tfnet.return_predict(image)
             results = check_if_object_in_path(results)
             car_status = check_status_of_car()
