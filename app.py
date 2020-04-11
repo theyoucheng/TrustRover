@@ -20,7 +20,7 @@ def get_route():
 
 @app.route("/completed_routes/<route>/<gif>")
 def images(route, gif):
-    fullpath = "./completed_routes/"+route+'/'+gif
+    fullpath = "./completed_routes/"+route+'/'+gifgit add
     with open(fullpath, 'rb') as f:
         resp = flask.make_response(f.read())
     resp.content_type = "image/gif"
@@ -28,5 +28,5 @@ def images(route, gif):
 
 
 if __name__=='__main__':
-  app.run(host='0.0.0.0', port='5000')
+  app.run(host='0.0.0.0')
 

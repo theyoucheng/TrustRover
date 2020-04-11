@@ -11,12 +11,11 @@ function main(){
     var yolo = document.getElementById("yolo_version").value;
     var go = document.getElementById("go")
     go.disable = true;
-    var loader = document.getElementById("loader");
+    var loader = document.getElementById("loader-section");
     var journey = document.getElementById("journey"); 
-    journey.hidden = true;
+    var predictedimage = document.getElementById("predicted-image"); 
+    predictedimage.hidden = true;
     loader.hidden = false;
-
-    journey
     var gif=[];
 
     $.get('/get_route', {
@@ -26,8 +25,9 @@ function main(){
      , function(data) {
        gif.push(data.img_gif_ret);
        journey.src = gif[0]; 
-       journey.hidden = false;
+       predictedimage.hidden = false;
        loader.hidden = true;
+       go.disbale =false;
        
        return false;
      })
@@ -60,7 +60,7 @@ function main(){
 
 <!-- Header -->
 <header class="w3-display-container w3-content w3-center" style="max-width:1500px">
-  <img class="w3-image" src="./static/_mainpage_image.jpg" alt="Trust Rover" width="1500" height="300">
+  <img class="w3-image" src="./static/images/_mainpage_image.jpg" alt="Trust Rover" width="1500" height="300">
   <div class="w3-display-middle w3-padding-large w3-border w3-wide w3-text-light-grey w3-center">
     <h1 class="w3-hide-medium w3-hide-small w3-xxxlarge">Trust Rover</h1>
     <h5 class="w3-hide-large" style="white-space:nowrap">Trust Rover</h5>
@@ -68,7 +68,20 @@ function main(){
   </div>
   
   <!-- Navbar (placed at the bottom of the header image) -->
-    <select id="route">
+</header>
+
+
+<!-- Page content -->
+<div class="w3-content w3-padding-large w3-margin-top" id="portfolio" style ="text-align:center">
+
+  <!-- Images (Portfolio) -->
+  
+
+  <!-- Contact -->
+  <div class="w3-light-grey w3-padding-large w3-padding-32 w3-margin-top" id="contact">
+  <div>
+
+      <select id="route">
     <option value="select_route">Select a Route</option>
   <option value="europa">europa</option>
   <option value="city_hall">city hall</option>
@@ -83,10 +96,20 @@ function main(){
   <option value="tiny">tiny</option>
   </select>
   <input id="go" type="button" onclick="main()" value="Go" />
-</header>
+  </div>
+  <div id ="loader-section" class= "loader_surround" hidden="true">
+    <div id ="loader" class="loader" ></div>
+    <p>predicting route</p>
+  </div>
+    <div id="predicted-image" hidden="true"> 
+    <img id="journey" src="" alt="journey" class="w3-image" width="300" height="300" >
+    <p>demo of prediction and car status</p>
+    </div>
+  </div>
 
+<!-- End page content -->
+</div>
 
-<!-- Page content -->
 <div class="w3-content w3-padding-large w3-margin-top" id="portfolio" style ="text-align:center">
 
   <!-- Images (Portfolio) -->
@@ -94,11 +117,9 @@ function main(){
 
   <!-- Contact -->
   <div class="w3-light-grey w3-padding-large w3-padding-32 w3-margin-top" id="contact">
-  <div class= "loader_surround">
-    <div id ="loader" class="loader" hidden="true"></div>
-  </div>  
-    <img id="journey" src="" alt="journey" class="w3-image" width="300" height="300" hidden="true">
-
+    <h3>Some of the possibilities of Trust Rover</h3>
+    <img id="driving-example" src="./static/images/driving-example-journey.gif" alt="driving-example" class="w3-image" width="800" height="600">
+    <p>This video shows how Trust Rover lines up with the decisions made by the driver of this vehicle. </p>
   </div>
 
 <!-- End page content -->
