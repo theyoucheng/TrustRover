@@ -1,9 +1,5 @@
 # TrustRover
 
-# Trust Google Account
-   account: trustrover@gmail.com
-   password : CSC3002Project
-   API KEY: AIzaSyBX_EJ7eVl--YFwkFzIB1wegoz4e-9q_78
 
 
 Step 1
