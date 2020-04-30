@@ -17,3 +17,6 @@ Cmd+Shift+R
 NN13 5TX ==> NN12 8TB
 
 convert -delay 100 -loop 0 adv-images/*jpg myimage.gif
+
+
+

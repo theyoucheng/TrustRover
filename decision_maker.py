@@ -17,6 +17,7 @@ class decision_maker:
     def print_car_warning_left_sector(self):
         print(self.car.warning_left_sector)
     
+    # checks if an object bounding box is within a sector
     def objectInSector(self,result, poly, message):
         corners = np.array([[result['topleft']['x'], result['topleft']['y']],
                        [result['bottomright']['x'], result['bottomright']['y']],
@@ -29,6 +30,7 @@ class decision_maker:
         
         return False
     
+    # checks if any objcts exist in any sectors and labels them if they are.
     def check_if_object_in_path(self, results):
         self.clearObjLists()
         for result in results:
@@ -46,10 +48,12 @@ class decision_maker:
 
         return results
 
+# clears the arrays holding the current objects detected in the slow and stop zones
     def clearObjLists(self):
         self.objs_in_slow_range.clear()
         self.objs_in_stop_range.clear()
     
+    # clears the previous slow and stop arrays and adds the current arrays into the previous arrays
     def set_prev_obj(self):
 
         self.prev_objs_in_slow_range.clear()
@@ -63,6 +67,7 @@ class decision_maker:
     def add_obj_to_danger_list(self, y):
         self.objs_in_stop_range.append(y)
 
+# checks the stop zone sector
     def check_stop_zone(self):
         if len(self.objs_in_stop_range) > 0:
             return "stopped"
@@ -71,6 +76,7 @@ class decision_maker:
         else:
             return "driving"
 
+# checks slow zone sector
     def check_slow_zone(self):
         if len(self.prev_objs_in_slow_range) == 0 and len(self.objs_in_slow_range) > 0 :
             return "decelerating"
@@ -89,6 +95,7 @@ class decision_maker:
         else:
             return "driving"
 
+# gets the status of the car based on the contents of the slow and stop zones
     def check_status_of_car(self):
         self.car.status =''
         self.car.status = self.check_stop_zone()

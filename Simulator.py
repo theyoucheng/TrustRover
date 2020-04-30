@@ -1,40 +1,46 @@
+# This is the simulator class
+# this class generates the decision maker and vehicle
+# once the predictiosn and decisions have been made
+# this class draws out the bounding box of all relevent objects and car status
+
 import os
 import sys
 
-import math
-## Need Python version > 2.7
-from collections import Counter
 import cv2
 import numpy as np
 import imageio
-from shapely.geometry import Point
-from shapely.geometry.polygon import Polygon
 import json
 from darkflow.net.build import TFNet
 from car import car
 from decision_maker import decision_maker
 
+# logs a string to the console
 def log_to_console(message):
     print(message)
 
-
+# generates and returns the object detector based on the model selected by the user
 def set_up_darkflow(model, weights, threshold, GPU):
     log_to_console("starting model")
     options = {"model": model, "load": weights, "threshold": threshold, "gpu": GPU}
     tfnet = TFNet(options)
     return tfnet
 
+# function takes in the object detector and image and returns all oin that image 
 def predict_image(image, tfnet):
     results = tfnet.return_predict(image)
     return results
 
+# gets the pre gather routes from the folders. returns the images of the selected route
 def get_images(path):
     log_to_console("getting steps from {0}".format(path))
+    #gets images
     steps = os.listdir(path)
+    # sorts images so they are in order
     steps = sorted(steps)
     log_to_console("steps gathered")
     return steps
 
+# converts list of images to gif
 def convertToGif(images, path):
     log_to_console("converting to gif")
     img_list=[]
@@ -43,6 +49,7 @@ def convertToGif(images, path):
             img_list.append(imageio.imread('{0}/{1}'.format(path, image)))
         imageio.mimsave('{0}/journey.gif'.format(path),img_list, duration=0.2)
 
+# decides what colour the object bounding box should be based on status of object
 def decide_box_colour(label):
     colour = (0,0,255)
     if label.startswith("danger"):
@@ -55,16 +62,21 @@ def decide_box_colour(label):
         colour = (51,165,255)
     return colour
 
+#  draws all the bounding boxes of the objects that have been detected in the different driving sectors
+#  also draws car status on image as text
 def write_boundingboxes(results, imgcv, new_img, car_status):
     for result in results:
         if result['status']=='': continue 
+        # draws bounding box per object
         cv2.rectangle(imgcv,
                      (result["topleft"]["x"], result["topleft"]["y"]),
                      (result["bottomright"]["x"],result["bottomright"]["y"]),
                      decide_box_colour(result["status"]), 2)
+    # adds car status as text to image
     cv2.putText(imgcv, "car status: {0}".format(car_status), (20, 20),cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0,0,0))
     cv2.imwrite(new_img, imgcv)
 
+# gets the object detector parameters based on user selected model
 def get_yolo_params(yolo):
     model = ""
     weights = ""
@@ -91,6 +103,7 @@ def get_yolo_params(yolo):
     else:
         return model, weights, threshold, GPU
 
+# starts the simulator
 def run(route, yolo):
    log_to_console("starting simulator")
    model, weights, threshold, GPU = get_yolo_params(yolo)      
@@ -99,6 +112,7 @@ def run(route, yolo):
    predictedpath = './completed_routes/{0}/'.format(route)
    steps = get_images(path)
    log_to_console("creating car")
+#  arrays below outline the different driving sectors
    driving_path = np.array([[190,200],[100,400],[300,400],[210,200]], np.int32)
    warning_left_sector = np.array([[driving_path[1][0],driving_path[0][1]],
                                 [driving_path[1][0],driving_path[0][1]+50],
@@ -130,9 +144,11 @@ def run(route, yolo):
              stopping_zone, slow_zone)
    log_to_console("car created")
    log_to_console("creating decision")
+#    decision maker object is created
    decisions = decision_maker(driving_car)
    log_to_console("decision maker created")
    log_to_console("starting the analysis")
+#    loops through each image from the route, predicts and creates new image with objects and status drawn on it
    for step in steps:
             imgcv = cv2.imread('{0}/{1}'.format(path, step))
             print("starting prediction")
@@ -141,6 +157,7 @@ def run(route, yolo):
             results = decisions.check_if_object_in_path(results)
             decisions.car.status = decisions.check_status_of_car()
             decisions.set_prev_obj()
+            # created folder to contain new simulated images
             if os.path.exists(predictedpath):
                 write_boundingboxes(results, imgcv, '{0}/{1}'.format(predictedpath, step), decisions.car.status)
             else:
@@ -151,6 +168,7 @@ def run(route, yolo):
                     print ("Creation of the directory {0} failed".format(predictedpath))
                 else:
                     print ("Successfully created the directory {0}".format(predictedpath))
+    # takes new images and converts to gif
    predicted_route = os.listdir(predictedpath)
    predicted_route = sorted(predicted_route)
    convertToGif(predicted_route, predictedpath)
